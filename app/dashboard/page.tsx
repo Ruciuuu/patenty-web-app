@@ -1,3 +1,6 @@
+
+"use client"
+
 import Link from 'next/link'
 import {
   Activity,
@@ -38,17 +41,10 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
-import { Progress } from '@/components/ui/progress'
 
-import { getSess, getUser } from '@/lib/user/get-user'
-import { getSession } from '@/lib/user/get-user';
-import { createClient } from '@/lib/auth/supabase-browser'
+import { Progress } from '@/components/ui/progress'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
+import { getCurrentSchool } from '@/lib/school/get-current-school'
 
 
 const stats = [
@@ -160,18 +156,14 @@ const activity = [
 
 
 
-const { user, profile, error } = await getUser();
-
-
 
 
 export default function DashboardPage() {
-    
+
 
 
   return (
     <div className="min-h-screen bg-[#F7FBFD] text-[#163A59]">
-      <DashboardHeader />
 
       <main className="mx-auto max-w-[1500px] px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
         <section className="relative mb-8 overflow-hidden rounded-[34px] bg-[#163A59] px-6 py-7 text-white sm:px-8 lg:px-10 lg:py-9">
@@ -203,9 +195,7 @@ export default function DashboardPage() {
                 Szkoła Błękitna Fala
               </Badge>
 
-              <h1 className="text-3xl font-extrabold tracking-[-0.03em] sm:text-4xl lg:text-5xl">
-                Dzień dobry, Jan
-              </h1>
+
 
               <p className="mt-3 max-w-xl text-base leading-7 text-white/65 sm:text-lg">
                 Oto najważniejsze informacje o kursantach i szkoleniach
@@ -215,7 +205,7 @@ export default function DashboardPage() {
 
             <div className="flex flex-col gap-3 sm:flex-row">
               <Button
-                
+
                 variant="outline"
                 className="h-12 rounded-2xl border-white/15 bg-white/10 px-5 text-white hover:bg-white/15 hover:text-white"
               >
@@ -226,7 +216,7 @@ export default function DashboardPage() {
               </Button>
 
               <Button
-            
+
                 className="h-12 rounded-2xl bg-[#4C8DD8] px-5 font-semibold text-white hover:bg-[#397CC9]"
               >
                 <Link href="/dashboard/students/new">
@@ -301,7 +291,7 @@ export default function DashboardPage() {
                 </div>
 
                 <Button
-                  
+
                   variant="ghost"
                   className="rounded-xl text-[#397CC9] hover:bg-[#EEF7FA] hover:text-[#286DAB]"
                 >
@@ -370,7 +360,7 @@ export default function DashboardPage() {
                 </div>
 
                 <Button
-                  
+
                   className="mt-6 h-12 w-full rounded-2xl bg-[#163A59] hover:bg-[#214C6D]"
                 >
                   <Link href="/dashboard/reports">
@@ -454,127 +444,7 @@ export default function DashboardPage() {
   )
 }
 
-function DashboardHeader() {
-  return (
-    <header className="sticky top-0 z-40 border-b border-[#E2EDF2] bg-[#F7FBFD]/90 backdrop-blur-xl">
-      <div className="mx-auto flex h-20 max-w-[1500px] items-center justify-between px-4 sm:px-6 lg:px-8">
-        <Link href="/dashboard" className="flex items-center gap-3">
-          <div className="flex size-10 items-center justify-center rounded-2xl bg-[#4C8DD8] text-white shadow-sm">
-            <Compass className="size-6" />
-          </div>
 
-          <div>
-            <p className="text-lg font-extrabold tracking-tight text-[#163A59]">
-              Helmio
-            </p>
-            <p className="text-[11px] text-[#7C98AB]">Panel szkoły</p>
-          </div>
-        </Link>
-
-        <nav className="hidden items-center gap-1 lg:flex">
-          <HeaderNavItem href="/dashboard" active icon={<Activity />}>
-            Dashboard
-          </HeaderNavItem>
-          <HeaderNavItem href="/dashboard/students" icon={<Users />}>
-            Kursanci
-          </HeaderNavItem>
-          <HeaderNavItem href="/dashboard/groups" icon={<GraduationCap />}>
-            Grupy
-          </HeaderNavItem>
-          <HeaderNavItem href="/dashboard/materials" icon={<BookOpen />}>
-            Materiały
-          </HeaderNavItem>
-          <HeaderNavItem href="/dashboard/reports" icon={<BarChart3 />}>
-            Raporty
-          </HeaderNavItem>
-        </nav>
-
-        <div className="flex items-center gap-2">
-          <div className="relative hidden md:block">
-            <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-[#9BBCCE]" />
-            <input
-              placeholder="Szukaj..."
-              className="h-10 w-52 rounded-xl border border-[#DDECF2] bg-white pl-10 pr-3 text-sm text-[#163A59] outline-none placeholder:text-[#9BBCCE] focus:border-[#78A4CB]"
-            />
-          </div>
-
-          <Button
-            size="icon"
-            variant="ghost"
-            className="relative rounded-xl text-[#68859A]"
-          >
-            <Bell className="size-5" />
-            <span className="absolute right-2 top-2 size-2 rounded-full bg-[#4C8DD8]" />
-          </Button>
-
-          <DropdownMenu>
-            <DropdownMenuTrigger >
-              <Button
-                variant="ghost"
-                className="h-11 gap-3 rounded-2xl px-2 hover:bg-[#EAF5F9]"
-              >
-                <Avatar className="size-9">
-                  <AvatarFallback className="bg-[#D9EEF7] font-bold text-[#3977A8]">
-                    JK
-                  </AvatarFallback>
-                </Avatar>
-
-                <div className="hidden text-left sm:block">
-                  <p className="text-sm font-semibold text-[#163A59]">
-                    Jan Kowalski
-                  </p>
-                  <p className="text-xs text-[#7C98AB]">Właściciel</p>
-                </div>
-
-                <ChevronDown className="hidden size-4 text-[#7C98AB] sm:block" />
-              </Button>
-            </DropdownMenuTrigger>
-
-            <DropdownMenuContent
-              align="end"
-              className="w-52 rounded-2xl border-[#DDECF2] p-2"
-            >
-              <DropdownMenuItem className="rounded-xl">
-                <Settings className="mr-2 size-4" />
-                Ustawienia
-              </DropdownMenuItem>
-              <DropdownMenuItem className="rounded-xl">
-                <Anchor className="mr-2 size-4" />
-                Profil szkoły
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-      </div>
-    </header>
-  )
-}
-
-function HeaderNavItem({
-  href,
-  icon,
-  active = false,
-  children,
-}: {
-  href: string
-  icon: React.ReactNode
-  active?: boolean
-  children: React.ReactNode
-}) {
-  return (
-    <Link
-      href={href}
-      className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium transition ${
-        active
-          ? 'bg-[#E1F2F8] text-[#286DAB]'
-          : 'text-[#68859A] hover:bg-[#EEF7FA] hover:text-[#163A59]'
-      }`}
-    >
-      <span className="[&_svg]:size-4">{icon}</span>
-      {children}
-    </Link>
-  )
-}
 
 function StatCard({
   label,
@@ -639,11 +509,10 @@ function ActivityChart() {
         {bars.map((height, index) => (
           <div key={`${height}-${index}`} className="flex h-full flex-1 items-end">
             <div
-              className={`w-full rounded-t-xl ${
-                index === bars.length - 1
-                  ? 'bg-[#4C8DD8]'
-                  : 'bg-[#B4E1EB]'
-              }`}
+              className={`w-full rounded-t-xl ${index === bars.length - 1
+                ? 'bg-[#4C8DD8]'
+                : 'bg-[#B4E1EB]'
+                }`}
               style={{ height: `${height}%` }}
             />
           </div>

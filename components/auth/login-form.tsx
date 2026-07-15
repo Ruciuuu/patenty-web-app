@@ -53,29 +53,8 @@ export function LoginForm() {
                 throw new Error('Nie udało się pobrać danych użytkownika.')
             }
 
-            /*     const { data: membership, error: membershipError } = await supabase
-                    .from('school_memberships')
-                    .select('school_id, role, status')
-                    .eq('user_id', data.user.id)
-                    .eq('status', 'active')
-                    .in('role', ['owner', 'admin', 'instructor'])
-                    .maybeSingle()
-    
-                if (membershipError) {
-                    throw membershipError
-                }
-    
-                if (!membership) {
-                    await supabase.auth.signOut()
-    
-                    setError(
-                        'To konto nie ma dostępu do panelu szkoły. Zaloguj się jako administrator lub instruktor.',
-                    )
-    
-                    return
-                }
-     */
-            router.replace('/dashboard')
+
+
             router.refresh()
         } catch (error) {
             setError(

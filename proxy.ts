@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { getCurrentSchool } from "./lib/school/get-current-school";
 
 const protectedRoutes = ["/dashboard"];
 const authRoutes = ["/login", "/register"];
@@ -86,6 +87,8 @@ export async function proxy(request: NextRequest) {
     // Zalogowany użytkownik próbuje wejść na login lub rejestrację.
     if (isAuthRoute && isAuthenticated) {
         const dashboardUrl = request.nextUrl.clone();
+
+
 
         dashboardUrl.pathname = "/dashboard";
         dashboardUrl.search = "";
