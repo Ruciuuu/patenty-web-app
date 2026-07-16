@@ -65,7 +65,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 
-import { SchoolSettingsCard } from '@/components/school/school-form'
+import { SchoolSettingsCard } from '@/components/settings/school-form'
 import { getCurrentSchoolForUser } from '@/actions/school-actions'
 
 
@@ -76,15 +76,15 @@ export default async function SettingsPage() {
 
     const schoolSetup = (await getCurrentSchoolForUser()).needsSchoolSetup
     const school = (await getCurrentSchoolForUser()).school
-
+    
 
 
     return (
         <div className="min-h-screen bg-[#F7FBFD] text-[#163A59]">
-            {schoolSetup?.valueOf ?
+            {schoolSetup.valueOf() ?
 
                 <div className="w-[50%] mx-auto mt-10">
-                    <SchoolSettingsCard schoolSetup={schoolSetup} school={school ?? null} />
+                    <SchoolSettingsCard schoolSetup={schoolSetup} school={school} />
                 </div>
                 :
 

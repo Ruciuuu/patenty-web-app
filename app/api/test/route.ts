@@ -1,10 +1,11 @@
 import { NextResponse } from 'next/server'
-import { getCurrentSchool } from '@/lib/school/get-current-school'
+import { getSchoolStudents } from '@/lib/school/get-school-students'
+
 
 export async function GET() {
-    const result = await getCurrentSchool()
+    const result = await getSchoolStudents()
 
-    if (!result.user) {
+  /*   if (!result.user) {
         return NextResponse.json(
             { error: 'Unauthorized' },
             { status: 401 },
@@ -17,10 +18,9 @@ export async function GET() {
             { error: result.error.message },
             { status: 500 },
         )
-    }
+    } */
 
     return NextResponse.json({
-        membership: result.membership,
-        school: result.school,
+        result
     })
 }

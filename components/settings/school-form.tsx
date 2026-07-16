@@ -30,13 +30,13 @@ import { Separator } from '@/components/ui/separator'
 
 type SchoolData = {
     name: string
-    email: string | null
-    address: string | null
+    email: string 
+    address: string 
 }
 
 interface SchoolSettingsCardProps {
     schoolSetup: boolean
-    school?: SchoolData | null
+    school: SchoolData
 }
 
 const initialState: CreateSchoolState = {
@@ -246,7 +246,7 @@ export function SchoolSettingsCard({
                 <SchoolDataRow
                     icon={<Building2 />}
                     label="Nazwa szkoły"
-
+                    value={school.name}
                 />
 
                 <Separator className="bg-[#E8F1F5]" />
@@ -254,7 +254,7 @@ export function SchoolSettingsCard({
                 <SchoolDataRow
                     icon={<Mail />}
                     label="Adres e-mail"
-
+                    value={school.email}
                 />
 
                 <Separator className="bg-[#E8F1F5]" />
@@ -262,7 +262,7 @@ export function SchoolSettingsCard({
                 <SchoolDataRow
                     icon={<MapPin />}
                     label="Adres szkoły"
-
+                    value={school.address}
                 />
 
                 <div className="rounded-2xl border border-[#D7E8EF] bg-[#F8FBFC] p-4">

@@ -93,7 +93,6 @@ export async function getCurrentSchool() {
             status: membership.status,
         } satisfies CurrentSchoolMembership,
         school,
-        school_test,
         needsSchoolSetup: false,
         error: null,
     }
