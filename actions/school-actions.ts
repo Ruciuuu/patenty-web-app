@@ -6,6 +6,8 @@ import { z } from 'zod'
 
 import { createClient } from '@/lib/auth/supabase-server'
 import { getCurrentSchool } from '@/lib/school/get-current-school'
+import { generateInvitationCode, hashInvitationCode } from '@/lib/school/generate-code'
+
 
 const createSchoolSchema = z.object({
     name: z
@@ -204,6 +206,11 @@ export async function createSchoolInvitation(
     const firstName = normalizeName(input.firstName)
     const lastName = normalizeName(input.lastName)
 
+    console.log('createSchoolInvitation started', {
+        schoolId: input.schoolId,
+        email: input.email,
+    })
+
     if (!schoolId) {
         return {
             success: false,
@@ -327,43 +334,21 @@ export async function createSchoolInvitation(
     if (!membership) {
         return {
             success: false,
-            error: 'Nie należysz do tej szkoły lub Twoje członkostwo jest nieaktywne.',
+            error:
+                'Nie należysz do tej szkoły lub Twoje członkostwo jest nieaktywne.',
         }
     }
 
-
-
-    const canInvite =
-        ALLOWED_INVITER_ROLES.includes(
-            membership.role as (typeof ALLOWED_INVITER_ROLES)[number]
-        )
+    const canInvite = ALLOWED_INVITER_ROLES.includes(
+        membership.role as (typeof ALLOWED_INVITER_ROLES)[number]
+    )
 
     if (!canInvite) {
         return {
             success: false,
-            error: 'Nie masz uprawnień do zapraszania użytkowników.',
+            error:
+                'Nie masz uprawnień do zapraszania użytkowników.',
         }
-    }
-
-    const {
-        data: existingMembership,
-        error: existingMembershipError,
-    } = await supabase
-        .from('school_memberships')
-        .select(`
-            id,
-            user_id
-        `)
-        .eq('school_id', schoolId)
-        .eq('status', 'active')
-        .eq('user_id', user.id)
-        .maybeSingle()
-
-    if (existingMembershipError) {
-        console.error(
-            'Nie udało się sprawdzić istniejącego członkostwa:',
-            existingMembershipError
-        )
     }
 
     const {
@@ -389,7 +374,8 @@ export async function createSchoolInvitation(
 
         return {
             success: false,
-            error: 'Nie udało się sprawdzić istniejących zaproszeń.',
+            error:
+                'Nie udało się sprawdzić istniejących zaproszeń.',
         }
     }
 
@@ -397,10 +383,18 @@ export async function createSchoolInvitation(
         return {
             success: false,
             field: 'email',
-            error: 'Aktywne zaproszenie dla tego adresu e-mail już istnieje.',
+            error:
+                'Aktywne zaproszenie dla tego adresu e-mail już istnieje.',
         }
     }
 
+    const invitationCode = generateInvitationCode()
+    const invitationCodeHash =
+        hashInvitationCode(invitationCode)
+
+    const expiresAt = new Date(
+        Date.now() + 7 * 24 * 60 * 60 * 1000
+    ).toISOString()
 
     const { data, error } = await supabase
         .from('school_invitations')
@@ -411,11 +405,11 @@ export async function createSchoolInvitation(
             first_name: firstName,
             last_name: lastName,
             status: 'pending',
+            invitation_code_hash: invitationCodeHash,
+            expires_at: expiresAt,
         })
         .select('id')
         .single()
-
-
 
     if (error) {
         console.error(
@@ -427,14 +421,16 @@ export async function createSchoolInvitation(
             return {
                 success: false,
                 field: 'email',
-                error: 'Aktywne zaproszenie dla tego adresu e-mail już istnieje.',
+                error:
+                    'Aktywne zaproszenie dla tego adresu e-mail już istnieje.',
             }
         }
 
         if (error.code === '42501') {
             return {
                 success: false,
-                error: 'Brak uprawnień do utworzenia zaproszenia.',
+                error:
+                    'Brak uprawnień do utworzenia zaproszenia.',
             }
         }
 
@@ -451,9 +447,10 @@ export async function createSchoolInvitation(
     return {
         success: true,
         invitationId: data.id,
+        invitationCode,
+        expiresAt,
     }
 }
-
 
 
 

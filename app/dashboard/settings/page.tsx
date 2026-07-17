@@ -19,60 +19,74 @@ import { StudentsList } from '@/components/settings/studentsList'
 
 export default async function SettingsPage() {
 
+
+
     const schoolSetup = (await getCurrentSchoolForUser()).needsSchoolSetup
-    const school = (await getCurrentSchoolForUser()).school
 
 
+    if (schoolSetup.valueOf()) {
+        const school = (await getCurrentSchoolForUser()).school
+        return (
+            < div className="min-h-screen bg-[#F7FBFD] text-[#163A59]" >
 
-    const schoolId = school.id
-
-
-
-    const studentsResult = await getStudents(schoolId)
-
-
-    return (
-        <div className="min-h-screen bg-[#F7FBFD] text-[#163A59]">
-            {schoolSetup.valueOf() ?
 
                 <div className="w-[50%] mx-auto mt-10">
                     <SchoolSettingsCard schoolSetup={schoolSetup} school={school} />
                 </div>
-                :
+            </div >
+
+
+        )
+
+    }
+
+    if (!schoolSetup.valueOf()) {
+        const school = (await getCurrentSchoolForUser()).school
+        const schoolId = school.id ? school.id : "";
+        const studentsResult = school.id ? await getStudents(schoolId) : ""
+
+        return (
+            <div className="min-h-screen bg-[#F7FBFD] text-[#163A59]">
+                {schoolSetup.valueOf() ?
+
+                    <div className="w-[50%] mx-auto mt-10">
+                        <SchoolSettingsCard schoolSetup={schoolSetup} school={school} />
+                    </div>
+                    :
 
 
 
 
-                <main className="mx-auto max-w-[1400px] px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
-                    <SettingsHero />
+                    <main className="mx-auto max-w-[1400px] px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+                        <SettingsHero />
 
-                    <div className="">
-                        <div className="space-y-6 flex flex-row justify-center items-center gap-2">
-                            <SchoolSettingsCard schoolSetup={schoolSetup} school={school} />
+                        <div className="">
+                            <div className="space-y-6 flex flex-row justify-center items-center gap-2">
+                                <SchoolSettingsCard schoolSetup={schoolSetup} school={school} />
 
-                            {/*  <LogoutCard
+                                {/*  <LogoutCard
                             isLoggingOut={isLoggingOut}
                             onLogout={handleLogout}
                         /> */}
-                            <StudentsPanel
-                                schoolId={schoolId}
+                                <StudentsPanel
+                                    schoolId={schoolId}
 
-                            />
-                            <StudentsList
-                                initialStudents={
-                                    studentsResult.success
-                                        ? studentsResult.students
-                                        : []
-                                }
-                                initialError={
-                                    studentsResult.success
-                                        ? null
-                                        : studentsResult.error
-                                }
-                            />
-                        </div>
+                                />
+                                <StudentsList
+                                    initialStudents={
+                                        studentsResult.success
+                                            ? studentsResult.students
+                                            : []
+                                    }
+                                    initialError={
+                                        studentsResult.success
+                                            ? null
+                                            : studentsResult.error
+                                    }
+                                />
+                            </div>
 
-                        {/*        <StudentsCard
+                            {/*        <StudentsCard
                         students={filteredStudents}
                         studentsCount={students.length}
                         search={search}
@@ -80,10 +94,14 @@ export default async function SettingsPage() {
                         onAddStudent={handleAddStudent}
                         onRemoveStudent={handleRemoveStudent}
                     /> */}
-                    </div>
-                </main>}
-        </div>
-    )
+                        </div>
+                    </main>}
+            </div>
+        )
+    }
+
+
+
 }
 
 function SettingsHero() {

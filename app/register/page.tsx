@@ -1,14 +1,8 @@
 import Link from 'next/link'
 import {
-    Anchor,
     ArrowLeft,
-    BarChart3,
     Compass,
-    GraduationCap,
-    Sailboat,
-    ShieldCheck,
-    Users,
-    Waves,
+
 } from 'lucide-react'
 
 import { RegisterForm } from '@/components/auth/register-form'

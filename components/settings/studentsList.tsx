@@ -28,7 +28,6 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { getSchoolInvitations } from '@/actions/school-actions'
 
 
 type StudentsListProps = {
@@ -190,8 +189,8 @@ function StudentRow({
                         className="rounded-xl text-[#9BBCCE]"
                     >
                         <MoreHorizontal className="size-5" />
-                        <span className="sr-only">
-                            Otwórz menu kursanta
+                        <span className="sr-only text-red bg-red">
+                            Usuń kursanta
                         </span>
                     </Button>
                 </DropdownMenuTrigger>
