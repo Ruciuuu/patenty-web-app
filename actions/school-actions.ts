@@ -136,3 +136,374 @@ export async function createSchoolAction(
 
     redirect('/dashboard')
 }
+
+
+
+
+
+
+
+export type CreateSchoolInvitationInput = {
+    schoolId: string
+    email: string
+    firstName: string
+    lastName: string
+}
+
+export type CreateSchoolInvitationResult =
+    | {
+        success: true
+        invitationId: string
+    }
+    | {
+        success: false
+        error: string
+        field?: keyof CreateSchoolInvitationInput
+    }
+
+
+
+type SchoolMembership = {
+    id: string
+    role: string
+    status: string
+}
+
+/**
+ * Dostosuj te role do wartości znajdujących się
+ * w enumie public.school_role.
+ */
+const ALLOWED_INVITER_ROLES = [
+    'owner',
+    'admin',
+] as const
+
+function normalizeEmail(email: string): string {
+    return email.trim().toLowerCase()
+}
+
+function normalizeName(name: string): string {
+    return name.trim().replace(/\s+/g, ' ')
+}
+
+function isValidUuid(value: string): boolean {
+    return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+        value
+    )
+}
+
+function isValidEmail(email: string): boolean {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+}
+
+export async function createSchoolInvitation(
+    input: CreateSchoolInvitationInput
+): Promise<CreateSchoolInvitationResult> {
+    const schoolId = input.schoolId.trim()
+    const email = normalizeEmail(input.email)
+    const firstName = normalizeName(input.firstName)
+    const lastName = normalizeName(input.lastName)
+
+    if (!schoolId) {
+        return {
+            success: false,
+            field: 'schoolId',
+            error: 'Brak identyfikatora szkoły.',
+        }
+    }
+
+    if (!isValidUuid(schoolId)) {
+        return {
+            success: false,
+            field: 'schoolId',
+            error: 'Nieprawidłowy identyfikator szkoły.',
+        }
+    }
+
+    if (!email) {
+        return {
+            success: false,
+            field: 'email',
+            error: 'Podaj adres e-mail.',
+        }
+    }
+
+    if (!isValidEmail(email)) {
+        return {
+            success: false,
+            field: 'email',
+            error: 'Podaj poprawny adres e-mail.',
+        }
+    }
+
+    if (!firstName) {
+        return {
+            success: false,
+            field: 'firstName',
+            error: 'Podaj imię zapraszanej osoby.',
+        }
+    }
+
+    if (firstName.length > 100) {
+        return {
+            success: false,
+            field: 'firstName',
+            error: 'Imię jest zbyt długie.',
+        }
+    }
+
+    if (!lastName) {
+        return {
+            success: false,
+            field: 'lastName',
+            error: 'Podaj nazwisko zapraszanej osoby.',
+        }
+    }
+
+    if (lastName.length > 100) {
+        return {
+            success: false,
+            field: 'lastName',
+            error: 'Nazwisko jest zbyt długie.',
+        }
+    }
+
+    const supabase = await createClient()
+
+    const {
+        data: { user },
+        error: userError,
+    } = await supabase.auth.getUser()
+
+    if (userError) {
+        console.error(
+            'Nie udało się pobrać użytkownika:',
+            userError
+        )
+
+        return {
+            success: false,
+            error: 'Nie udało się zweryfikować użytkownika.',
+        }
+    }
+
+    if (!user) {
+        return {
+            success: false,
+            error: 'Musisz być zalogowany.',
+        }
+    }
+
+    const {
+        data: membershipData,
+        error: membershipError,
+    } = await supabase
+        .from('school_memberships')
+        .select(`
+            id,
+            role,
+            status
+        `)
+        .eq('school_id', schoolId)
+        .eq('user_id', user.id)
+        .eq('status', 'active')
+        .maybeSingle()
+
+    if (membershipError) {
+        console.error(
+            'Nie udało się sprawdzić członkostwa w szkole:',
+            membershipError
+        )
+
+        return {
+            success: false,
+            error: 'Nie udało się sprawdzić uprawnień.',
+        }
+    }
+
+    const membership =
+        membershipData as SchoolMembership | null
+
+    if (!membership) {
+        return {
+            success: false,
+            error: 'Nie należysz do tej szkoły lub Twoje członkostwo jest nieaktywne.',
+        }
+    }
+
+
+
+    const canInvite =
+        ALLOWED_INVITER_ROLES.includes(
+            membership.role as (typeof ALLOWED_INVITER_ROLES)[number]
+        )
+
+    if (!canInvite) {
+        return {
+            success: false,
+            error: 'Nie masz uprawnień do zapraszania użytkowników.',
+        }
+    }
+
+    const {
+        data: existingMembership,
+        error: existingMembershipError,
+    } = await supabase
+        .from('school_memberships')
+        .select(`
+            id,
+            user_id
+        `)
+        .eq('school_id', schoolId)
+        .eq('status', 'active')
+        .eq('user_id', user.id)
+        .maybeSingle()
+
+    if (existingMembershipError) {
+        console.error(
+            'Nie udało się sprawdzić istniejącego członkostwa:',
+            existingMembershipError
+        )
+    }
+
+    const {
+        data: existingInvitation,
+        error: existingInvitationError,
+    } = await supabase
+        .from('school_invitations')
+        .select(`
+            id,
+            status,
+            expires_at
+        `)
+        .eq('school_id', schoolId)
+        .ilike('email', email)
+        .eq('status', 'pending')
+        .maybeSingle()
+
+    if (existingInvitationError) {
+        console.error(
+            'Nie udało się sprawdzić istniejącego zaproszenia:',
+            existingInvitationError
+        )
+
+        return {
+            success: false,
+            error: 'Nie udało się sprawdzić istniejących zaproszeń.',
+        }
+    }
+
+    if (existingInvitation) {
+        return {
+            success: false,
+            field: 'email',
+            error: 'Aktywne zaproszenie dla tego adresu e-mail już istnieje.',
+        }
+    }
+
+
+    const { data, error } = await supabase
+        .from('school_invitations')
+        .insert({
+            school_id: schoolId,
+            invited_by_user_id: user.id,
+            email,
+            first_name: firstName,
+            last_name: lastName,
+            status: 'pending',
+        })
+        .select('id')
+        .single()
+
+
+
+    if (error) {
+        console.error(
+            'Nie udało się utworzyć zaproszenia:',
+            error
+        )
+
+        if (error.code === '23505') {
+            return {
+                success: false,
+                field: 'email',
+                error: 'Aktywne zaproszenie dla tego adresu e-mail już istnieje.',
+            }
+        }
+
+        if (error.code === '42501') {
+            return {
+                success: false,
+                error: 'Brak uprawnień do utworzenia zaproszenia.',
+            }
+        }
+
+        return {
+            success: false,
+            error: 'Nie udało się utworzyć zaproszenia.',
+        }
+    }
+
+    revalidatePath('/dashboard')
+    revalidatePath('/dashboard/school')
+    revalidatePath('/dashboard/school/invitations')
+
+    return {
+        success: true,
+        invitationId: data.id,
+    }
+}
+
+
+
+
+
+export async function getSchoolInvitations(school_id) {
+
+    const supabase = await createClient();
+
+
+
+
+    const {
+        data: existingInvitations,
+        error: existingInvitationError,
+    } = await supabase
+        .from('school_invitations')
+        .select(`
+            id, email, first_name, last_name
+            
+        `)
+
+        .eq("school_id", school_id)
+        .maybeSingle()
+
+    if (existingInvitationError) {
+        console.error(
+            'Nie udało się sprawdzić istniejącego zaproszenia:',
+            existingInvitationError
+        )
+
+        return {
+            success: false,
+            error: 'Nie udało się sprawdzić istniejących zaproszeń.',
+        }
+    }
+
+    if (existingInvitations) {
+        return {
+            success: false,
+            field: 'email',
+            error: 'Aktywne zaproszenie dla tego adresu e-mail już istnieje.',
+        }
+
+
+    }
+    console.log(existingInvitations)
+
+    return {
+        students: existingInvitations
+    }
+
+
+}

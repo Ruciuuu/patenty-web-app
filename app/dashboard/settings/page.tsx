@@ -1,72 +1,17 @@
 
 
 import {
-    AlertTriangle,
-    Anchor,
-    Building2,
-    Camera,
-    Check,
-    ChevronRight,
     Compass,
-    GraduationCap,
-    Loader2,
-    LogOut,
-    Mail,
-    MapPin,
-    MoreHorizontal,
-    Plus,
-    Save,
-    Search,
     Settings,
-    Trash2,
-    Upload,
-    UserPlus,
-    Users,
-    Waves,
 } from 'lucide-react'
 
-import { createClient } from '@/lib/auth/supabase-browser'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardHeader,
-    CardTitle,
-} from '@/components/ui/card'
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
-} from '@/components/ui/dialog'
-import {
-    AlertDialog,
-    AlertDialogAction,
-    AlertDialogCancel,
-    AlertDialogContent,
-    AlertDialogDescription,
-    AlertDialogFooter,
-    AlertDialogHeader,
-    AlertDialogTitle,
-    AlertDialogTrigger,
-} from '@/components/ui/alert-dialog'
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 
 import { SchoolSettingsCard } from '@/components/settings/school-form'
 import { getCurrentSchoolForUser } from '@/actions/school-actions'
+import { getStudents } from '@/actions/student-actions'
+import { StudentsPanel } from '@/components/settings/students-panel'
+import { StudentsList } from '@/components/settings/studentsList'
 
 
 
@@ -76,7 +21,14 @@ export default async function SettingsPage() {
 
     const schoolSetup = (await getCurrentSchoolForUser()).needsSchoolSetup
     const school = (await getCurrentSchoolForUser()).school
-    
+
+
+
+    const schoolId = school.id
+
+
+
+    const studentsResult = await getStudents(schoolId)
 
 
     return (
@@ -94,14 +46,30 @@ export default async function SettingsPage() {
                 <main className="mx-auto max-w-[1400px] px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
                     <SettingsHero />
 
-                    <div className="grid gap-6 xl:grid-cols-[0.74fr_1.26fr]">
-                        <div className="space-y-6">
+                    <div className="">
+                        <div className="space-y-6 flex flex-row justify-center items-center gap-2">
                             <SchoolSettingsCard schoolSetup={schoolSetup} school={school} />
 
                             {/*  <LogoutCard
                             isLoggingOut={isLoggingOut}
                             onLogout={handleLogout}
                         /> */}
+                            <StudentsPanel
+                                schoolId={schoolId}
+
+                            />
+                            <StudentsList
+                                initialStudents={
+                                    studentsResult.success
+                                        ? studentsResult.students
+                                        : []
+                                }
+                                initialError={
+                                    studentsResult.success
+                                        ? null
+                                        : studentsResult.error
+                                }
+                            />
                         </div>
 
                         {/*        <StudentsCard

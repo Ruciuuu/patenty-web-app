@@ -1,41 +1,5 @@
 
 
-type Student = {
-    id: string
-    firstName: string
-    lastName: string
-    email: string
-    course: string
-    status: 'active' | 'invited'
-}
-
-const initialStudents: Student[] = [
-    {
-        id: '1',
-        firstName: 'Anna',
-        lastName: 'Kowalska',
-        email: 'anna.kowalska@email.pl',
-        course: 'Sternik motorowodny',
-        status: 'active',
-    },
-    {
-        id: '2',
-        firstName: 'Michał',
-        lastName: 'Nowak',
-        email: 'michal.nowak@email.pl',
-        course: 'Żeglarz jachtowy',
-        status: 'active',
-    },
-    {
-        id: '3',
-        firstName: 'Karolina',
-        lastName: 'Wójcik',
-        email: 'karolina.wojcik@email.pl',
-        course: 'Sternik motorowodny',
-        status: 'invited',
-    },
-]
-
 
 
 export default async function StudentRow() {

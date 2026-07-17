@@ -30,8 +30,8 @@ import { Separator } from '@/components/ui/separator'
 
 type SchoolData = {
     name: string
-    email: string 
-    address: string 
+    email: string
+    address: string
 }
 
 interface SchoolSettingsCardProps {
@@ -59,7 +59,7 @@ export function SchoolSettingsCard({
      */
     if (schoolSetup) {
         return (
-            <Card className="overflow-hidden rounded-[30px] border-[#DDECF2] bg-white shadow-[0_16px_50px_rgba(33,78,110,0.06)]">
+            <Card className="overflow-hidden rounded-[30px]  bg-white">
                 <CardHeader className="border-b border-[#E8F1F5] px-6 py-5">
                     <div className="flex items-start gap-4">
                         <div className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-[#E1F2F8] text-[#397CC9]">
