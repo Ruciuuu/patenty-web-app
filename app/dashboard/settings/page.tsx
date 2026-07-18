@@ -7,12 +7,12 @@ import {
 
 import { Badge } from '@/components/ui/badge'
 
-import { SchoolSettingsCard } from '@/components/settings/school-form'
+
 import { getCurrentSchoolForUser } from '@/actions/school-actions'
 import { getStudents } from '@/actions/student-actions'
-import { StudentsPanel } from '@/components/settings/students-panel'
+import { StudentsForm } from '@/components/settings/studentsForm'
 import { StudentsList } from '@/components/settings/studentsList'
-
+import { SchoolForm } from '@/components/settings/schoolForm'
 
 
 
@@ -31,7 +31,7 @@ export default async function SettingsPage() {
 
 
                 <div className="w-[50%] mx-auto mt-10">
-                    <SchoolSettingsCard schoolSetup={schoolSetup} school={school} />
+                    <SchoolForm schoolSetup={schoolSetup} school={school} />
                 </div>
             </div >
 
@@ -47,55 +47,41 @@ export default async function SettingsPage() {
 
         return (
             <div className="min-h-screen bg-[#F7FBFD] text-[#163A59]">
-                {schoolSetup.valueOf() ?
-
-                    <div className="w-[50%] mx-auto mt-10">
-                        <SchoolSettingsCard schoolSetup={schoolSetup} school={school} />
-                    </div>
-                    :
 
 
 
 
-                    <main className="mx-auto max-w-[1400px] px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
-                        <SettingsHero />
 
-                        <div className="">
-                            <div className="space-y-6 flex flex-row justify-center items-center gap-2">
-                                <SchoolSettingsCard schoolSetup={schoolSetup} school={school} />
+                <main className="mx-auto max-w-[1400px] px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+                    <SettingsHero />
 
-                                {/*  <LogoutCard
+                    <div className="">
+                        <div className="space-y-6 flex flex-row justify-center items-center gap-2">
+                            <SchoolForm schoolSetup={schoolSetup} school={school} />
+
+                            {/*  <LogoutCard
                             isLoggingOut={isLoggingOut}
                             onLogout={handleLogout}
                         /> */}
-                                <StudentsPanel
-                                    schoolId={schoolId}
+                            <StudentsForm
+                                schoolId={schoolId}
 
-                                />
-                                <StudentsList
-                                    initialStudents={
-                                        studentsResult.success
-                                            ? studentsResult.students
-                                            : []
-                                    }
-                                    initialError={
-                                        studentsResult.success
-                                            ? null
-                                            : studentsResult.error
-                                    }
-                                />
-                            </div>
-
-                            {/*        <StudentsCard
-                        students={filteredStudents}
-                        studentsCount={students.length}
-                        search={search}
-                        onSearchChange={setSearch}
-                        onAddStudent={handleAddStudent}
-                        onRemoveStudent={handleRemoveStudent}
-                    /> */}
+                            />
+                            <StudentsList
+                                initialStudents={
+                                    studentsResult.success
+                                        ? studentsResult.students
+                                        : []
+                                }
+                                initialError={
+                                    studentsResult.success
+                                        ? null
+                                        : studentsResult.error
+                                }
+                            />
                         </div>
-                    </main>}
+                    </div>
+                </main>
             </div>
         )
     }

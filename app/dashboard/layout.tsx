@@ -2,8 +2,7 @@ import type { ReactNode } from 'react'
 import { redirect } from 'next/navigation'
 
 import { Header } from '@/components/header'
-import { getUserInfo } from '@/lib/user/get-user-info'
-import { getCurrentSchool } from '@/lib/school/get-current-school'
+import { getUserInfo } from '@/actions/user-actions'
 
 export default async function DashboardLayout({
     children,
@@ -23,7 +22,7 @@ export default async function DashboardLayout({
     const lastName = user.user_metadata?.last_name ? user.user_metadata?.last_name : ""
 
     /* Sprawdzam czy użytkownik utworzył swoją szkołę */
-   
+
 
     return (
         <>

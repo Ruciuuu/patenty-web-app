@@ -5,7 +5,7 @@ import {
 
 } from 'lucide-react'
 
-import { RegisterForm } from '@/components/auth/register-form'
+import { RegisterForm } from '@/components/auth/registerForm'
 
 export default function RegisterPage() {
     return (

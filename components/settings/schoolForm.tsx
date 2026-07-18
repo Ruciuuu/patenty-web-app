@@ -44,7 +44,7 @@ const initialState: CreateSchoolState = {
     fieldErrors: {},
 }
 
-export function SchoolSettingsCard({
+export function SchoolForm({
     schoolSetup,
     school,
 }: SchoolSettingsCardProps) {

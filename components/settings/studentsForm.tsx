@@ -48,7 +48,7 @@ const EMPTY_FORM: Omit<
     email: '',
 }
 
-export function StudentsPanel({
+export function StudentsForm({
     schoolId,
 }: StudentsPanelProps) {
     const router = useRouter()

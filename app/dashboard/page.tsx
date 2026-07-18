@@ -44,7 +44,6 @@ import {
 
 import { Progress } from '@/components/ui/progress'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
-import { getCurrentSchool } from '@/lib/school/get-current-school'
 
 
 const stats = [
@@ -166,6 +165,8 @@ export default function DashboardPage() {
     <div className="min-h-screen bg-[#F7FBFD] text-[#163A59]">
 
       <main className="mx-auto max-w-[1500px] px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+
+        <h1 className='mx-auto font-bold'> TEMPLATE</h1>
         <section className="relative mb-8 overflow-hidden rounded-[34px] bg-[#163A59] px-6 py-7 text-white sm:px-8 lg:px-10 lg:py-9">
           <div className="absolute -right-12 -top-28 size-80 rounded-full border-[44px] border-[#B4E1EB]/10" />
           <div className="absolute -bottom-28 left-[38%] size-72 rounded-full bg-[#4C8DD8]/15 blur-2xl" />

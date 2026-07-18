@@ -5,8 +5,8 @@ import { redirect } from 'next/navigation'
 import { z } from 'zod'
 
 import { createClient } from '@/lib/auth/supabase-server'
-import { getCurrentSchool } from '@/lib/school/get-current-school'
 import { generateInvitationCode, hashInvitationCode } from '@/lib/school/generate-code'
+import { CreateSchoolInvitationInput, CreateSchoolInvitationResult, CreateSchoolState, CurrentSchoolData, CurrentSchoolMembership, SchoolMembership } from '@/types/school'
 
 
 const createSchoolSchema = z.object({
@@ -30,15 +30,6 @@ const createSchoolSchema = z.object({
         .max(250, 'Adres szkoły jest zbyt długi.'),
 })
 
-export type CreateSchoolState = {
-    success?: boolean
-    error?: string | null
-    fieldErrors?: {
-        name?: string[]
-        email?: string[]
-        address?: string[]
-    }
-}
 
 /**
  * Pobiera szkołę przypisaną do obecnie zalogowanego użytkownika.
@@ -46,8 +37,91 @@ export type CreateSchoolState = {
  * Funkcję wywołuj wyłącznie z Server Componentu,
  * Server Action albo Route Handlera.
  */
+
+
+
+
 export async function getCurrentSchoolForUser() {
-    return getCurrentSchool()
+    const supabase = await createClient()
+
+    const {
+        data: { user },
+        error: userError,
+    } = await supabase.auth.getUser()
+
+    if (userError || !user) {
+        return {
+            user: null,
+            membership: null,
+            school: null,
+            needsSchoolSetup: false,
+            error:
+                userError ??
+                new Error('Brak zalogowanego użytkownika'),
+        }
+    }
+
+    const { data: membership, error: membershipError } = await supabase
+        .from('school_memberships')
+        .select(`
+      id,
+      role,
+      status,
+      school_id,
+      school:schools (
+        id,
+        name,
+        email,
+        address,
+        status
+      )
+    `)
+        .eq('user_id', user.id)
+        .eq('status', 'active')
+        .maybeSingle()
+
+
+
+    if (membershipError) {
+        return {
+            user,
+            membership: null,
+            school: null,
+            needsSchoolSetup: false,
+            error: membershipError,
+        }
+    }
+
+    if (!membership) {
+        return {
+            user,
+            membership: null,
+            school: null,
+            needsSchoolSetup: true,
+            error: null,
+        }
+    }
+
+    /*
+     * Przy poprawnej relacji Supabase zwróci obiekt szkoły.
+     * Cast upraszcza typy do czasu wygenerowania Database types.
+     */
+    const school = membership.school as unknown as CurrentSchoolData | null
+
+
+
+    return {
+        user,
+        membership: {
+            id: membership.id,
+            school_id: membership.school_id,
+            role: membership.role,
+            status: membership.status,
+        } satisfies CurrentSchoolMembership,
+        school,
+        needsSchoolSetup: false,
+        error: null,
+    }
 }
 
 export async function createSchoolAction(
@@ -145,31 +219,7 @@ export async function createSchoolAction(
 
 
 
-export type CreateSchoolInvitationInput = {
-    schoolId: string
-    email: string
-    firstName: string
-    lastName: string
-}
 
-export type CreateSchoolInvitationResult =
-    | {
-        success: true
-        invitationId: string
-    }
-    | {
-        success: false
-        error: string
-        field?: keyof CreateSchoolInvitationInput
-    }
-
-
-
-type SchoolMembership = {
-    id: string
-    role: string
-    status: string
-}
 
 /**
  * Dostosuj te role do wartości znajdujących się
@@ -455,7 +505,7 @@ export async function createSchoolInvitation(
 
 
 
-export async function getSchoolInvitations(school_id) {
+export async function getSchoolInvitations(school_id: string) {
 
     const supabase = await createClient();
 
@@ -501,6 +551,42 @@ export async function getSchoolInvitations(school_id) {
     return {
         students: existingInvitations
     }
+
+
+}
+
+
+
+
+
+export async function getSchoolStudents() {
+
+    const supabase = await createClient();
+    const currentSchool = await getCurrentSchoolForUser();
+
+
+    const schoolId = currentSchool.school.id
+
+    const {
+        data: { user },
+        error: userError,
+    } = await supabase.auth.getUser()
+
+    if (userError || !user) {
+        return {
+
+        }
+    }
+
+    const data = await supabase
+        .from("school_memberships")
+        .select("user_id")
+        .eq("school_id", schoolId)
+        .eq("role", "student")
+
+    return (
+        data
+    )
 
 
 }

@@ -23,6 +23,7 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 
+
 export function RegisterForm() {
 
 
@@ -95,7 +96,6 @@ export function RegisterForm() {
             if (!data) {
                 setError("Problem ze serwerem, skontakuj się z pomocą techniczną")
             }
-
 
 
         } catch (caughtError) {

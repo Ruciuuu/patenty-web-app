@@ -1,42 +1,9 @@
 'use server'
 
 import { createClient } from "@/lib/auth/supabase-server"
+import { GetStudentsResult, MembershipRow, ProfileRow, SchoolStudent } from "@/types/student"
 
-export type SchoolStudent = {
-    membershipId: string
-    userId: string
-    schoolId: string
-    firstName: string
-    lastName: string
-    email: string
-    status: string
-    joinedAt: string
-}
-
-export type GetStudentsResult =
-    | {
-        success: true
-        students: SchoolStudent[]
-    }
-    | {
-        success: false
-        error: string
-    }
-
-type MembershipRow = {
-    id: string
-    school_id: string
-    user_id: string
-    status: string
-    created_at: string
-}
-
-type ProfileRow = {
-    id: string
-    first_name: string | null
-    last_name: string | null
-    email: string | null
-}
+ 
 
 function isValidUuid(value: string): boolean {
     return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(

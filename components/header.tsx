@@ -47,18 +47,18 @@ export function Header({
                     <HeaderNavItem href="/dashboard" active icon={<Activity />}>
                         Dashboard
                     </HeaderNavItem>
-                    <HeaderNavItem href="/dashboard/students" icon={<Users />}>
-                        Kursanci
+                    <HeaderNavItem href="/dashboard/school" icon={<GraduationCap />}>
+                        Szkoła
                     </HeaderNavItem>
-                    <HeaderNavItem href="/dashboard/groups" icon={<GraduationCap />}>
+                    {/*         <HeaderNavItem href="/dashboard/groups" icon={<GraduationCap />}>
                         Grupy
-                    </HeaderNavItem>
-                    <HeaderNavItem href="/dashboard/materials" icon={<BookOpen />}>
+                    </HeaderNavItem> */}
+                    {/*      <HeaderNavItem href="/dashboard/materials" icon={<BookOpen />}>
                         Materiały
-                    </HeaderNavItem>
-                    <HeaderNavItem href="/dashboard/reports" icon={<BarChart3 />}>
+                    </HeaderNavItem> */}
+                    {/*       <HeaderNavItem href="/dashboard/reports" icon={<BarChart3 />}>
                         Raporty
-                    </HeaderNavItem>
+                    </HeaderNavItem> */}
                 </nav>
 
                 <div className="flex items-center gap-2">

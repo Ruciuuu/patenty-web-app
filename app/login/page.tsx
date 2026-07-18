@@ -3,7 +3,7 @@ import {
     ArrowLeft,
 } from 'lucide-react'
 
-import { LoginForm } from '@/components/auth/login-form'
+import { LoginForm } from '@/components/auth/loginForm'
 
 export default function LoginPage() {
     return (
