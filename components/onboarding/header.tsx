@@ -1,13 +1,13 @@
-import { Activity, LogOutIcon, BarChart3, BookOpen, ChevronDown, Compass, GraduationCap, MoreHorizontal, Search, Settings, Users } from "lucide-react"
-import Link from "next/link"
+import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { Avatar, AvatarFallback } from '@/components/ui/avatar'
-import { Button } from "./ui/button"
+import { ChevronDown, LogOutIcon, Settings } from "lucide-react"
+import Link from "next/link"
+import { Button } from '../ui/button'
 
 
 interface HeaderProps {
@@ -41,29 +41,8 @@ export function Header({
                     </div>
                 </Link>
 
-                <nav className="hidden items-center gap-1 lg:flex">
-                    <HeaderNavItem href="/dashboard" active icon={<Activity />}>
-                        Dashboard
-                    </HeaderNavItem>
-                    <HeaderNavItem href="/dashboard/school" icon={<GraduationCap />}>
-                        Szkoła
-                    </HeaderNavItem>
-
-                </nav>
 
                 <div className="flex items-center gap-2">
-
-
-                    {/* Powiadomienia */}
-                    {/*         <Button
-            size="icon"
-            variant="ghost"
-            className="relative rounded-xl text-[#68859A]"
-          >
-            <Bell className="size-5" />
-            <span className="absolute right-2 top-2 size-2 rounded-full bg-[#4C8DD8]" />
-          </Button> */}
-
                     <DropdownMenu>
                         <DropdownMenuTrigger >
                             <Button
@@ -93,7 +72,7 @@ export function Header({
                         >
                             <DropdownMenuItem className="rounded-xl">
                                 <Settings className="mr-2 size-4" />
-                                <a href="/dashboard/settings"> Ustawienia</a>
+
                             </DropdownMenuItem>
                             <DropdownMenuItem className="rounded-xl text-red-600 hover:text-red-500 cursor-pointer">
                                 <LogOutIcon className="mr-2 size-4" />

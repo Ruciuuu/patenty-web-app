@@ -1,10 +1,15 @@
-export type CurrentSchoolData = {
-    id: string
-    name: string
-    email: string | null
-    address: string
-    status: string
-}
+export type SchoolData = {
+    id: string;
+    name: string;
+    email: string;
+    address: string;
+    status: "onboarding" | "active" | "suspended";
+    role: string;
+};
+
+
+
+
 
 export type CurrentSchoolMembership = {
     id: string

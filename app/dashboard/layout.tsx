@@ -1,40 +1,41 @@
-import type { ReactNode } from 'react'
-import { redirect } from 'next/navigation'
+import { redirect } from "next/navigation";
+import type { ReactNode } from "react";
 
-import { Header } from '@/components/header'
-import { getUserInfo } from '@/actions/user-actions'
+import { getUserInfo } from "@/actions/user-actions";
+import { createClient } from "@/lib/auth/supabase-server";
 
 export default async function DashboardLayout({
     children,
 }: {
-    children: ReactNode
+    children: ReactNode;
 }) {
-
-
-    /* User info */
-    const { user } = await getUserInfo()
+    const { user } = await getUserInfo();
 
     if (!user) {
-        throw new Error("User does not exist")
+        redirect("/login");
     }
 
-    const firstName = user.user_metadata?.first_name ? user.user_metadata?.first_name : ""
-    const lastName = user.user_metadata?.last_name ? user.user_metadata?.last_name : ""
+    const supabase = await createClient();
 
-    /* Sprawdzam czy użytkownik utworzył swoją szkołę */
+    const { data: profile, error } = await supabase
+        .from("profiles")
+        .select("account_type")
+        .eq("id", user.id)
+        .single();
+
+    if (error || !profile) {
+        redirect("/no-access");
+    }
+
+    if (profile.account_type !== "school_user") {
+        redirect("/no-access");
+    }
 
 
     return (
-        <>
-            <div className="min-h-screen bg-[#F7FBFD]">
-                <Header
+        <div className="min-h-screen bg-[#F7FBFD]">
 
-                    firstName={firstName}
-                    lastName={lastName}
-                />
-
-                {children}
-            </div>
-        </>
-    )
+            {children}
+        </div>
+    );
 }

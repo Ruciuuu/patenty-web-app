@@ -8,87 +8,47 @@ import {
 import { Badge } from '@/components/ui/badge'
 
 
-import { getCurrentSchoolForUser } from '@/actions/school-actions'
-import { getStudents } from '@/actions/student-actions'
+import { SchoolCard } from '@/components/home/schoolCard'
 import { StudentsForm } from '@/components/settings/studentsForm'
-import { StudentsList } from '@/components/settings/studentsList'
-import { SchoolForm } from '@/components/settings/schoolForm'
+import { getCurrentSchool } from '@/lib/school/get-current-school'
 
 
 
 
 export default async function SettingsPage() {
 
+    const school = await getCurrentSchool()
 
 
-    const schoolSetup = (await getCurrentSchoolForUser()).needsSchoolSetup
+    return (
+        <>
+            <main className="mx-auto px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+                <SettingsHero />
 
+                <div className="">
+                    <div className="space-y-6 flex flex-row  justify-start items-center gap-2">
+                        <SchoolCard school={school} />
 
-    if (schoolSetup.valueOf()) {
-        const school = (await getCurrentSchoolForUser()).school
-        return (
-            < div className="min-h-screen bg-[#F7FBFD] text-[#163A59]" >
-
-
-                <div className="w-[50%] mx-auto mt-10">
-                    <SchoolForm schoolSetup={schoolSetup} school={school} />
-                </div>
-            </div >
-
-
-        )
-
-    }
-
-    if (!schoolSetup.valueOf()) {
-        const school = (await getCurrentSchoolForUser()).school
-        const schoolId = school.id ? school.id : "";
-        const studentsResult = school.id ? await getStudents(schoolId) : ""
-
-        return (
-            <div className="min-h-screen bg-[#F7FBFD] text-[#163A59]">
-
-
-
-
-
-                <main className="mx-auto max-w-[1400px] px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
-                    <SettingsHero />
-
-                    <div className="">
-                        <div className="space-y-6 flex flex-row justify-center items-center gap-2">
-                            <SchoolForm schoolSetup={schoolSetup} school={school} />
-
-                            {/*  <LogoutCard
+                        {/*  <LogoutCard
                             isLoggingOut={isLoggingOut}
                             onLogout={handleLogout}
-                        /> */}
-                            <StudentsForm
-                                schoolId={schoolId}
+                        */}
+                        <StudentsForm
+                            schoolId={school.id}
 
-                            />
-                            <StudentsList
-                                initialStudents={
-                                    studentsResult.success
-                                        ? studentsResult.students
-                                        : []
-                                }
-                                initialError={
-                                    studentsResult.success
-                                        ? null
-                                        : studentsResult.error
-                                }
-                            />
-                        </div>
+                        />
+
                     </div>
-                </main>
-            </div>
-        )
-    }
 
+                </div>
+            </main>
 
-
+        </>
+    )
 }
+
+
+
 
 function SettingsHero() {
     return (

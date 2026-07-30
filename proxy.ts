@@ -1,6 +1,5 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
-import { getCurrentSchool } from "./lib/school/get-current-school";
 
 const protectedRoutes = ["/dashboard"];
 const authRoutes = ["/login", "/register"];

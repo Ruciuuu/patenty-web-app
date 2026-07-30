@@ -1,27 +1,24 @@
 'use client'
 
-import { useMemo, useState } from 'react'
-import Link from 'next/link'
-import { useRouter } from 'next/navigation'
 import {
     AlertCircle,
-    AtSign,
-    Building2,
     CheckCircle2,
     Eye,
     EyeOff,
     Loader2,
     LockKeyhole,
     Mail,
-    User,
+    User
 } from 'lucide-react'
+import Link from 'next/link'
+import { useState } from 'react'
 
-import { createClient } from '@/lib/auth/supabase-browser'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { createClient } from '@/lib/auth/supabase-browser'
 
 
 export function RegisterForm() {
@@ -85,7 +82,8 @@ export function RegisterForm() {
                     options: {
                         data: {
                             first_name: firstName,
-                            last_name: lastName
+                            last_name: lastName,
+                            account_type: "school_user"
                         }
 
 

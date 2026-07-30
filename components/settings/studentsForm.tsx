@@ -1,21 +1,16 @@
 'use client'
 
 import {
-    FormEvent,
-    useState,
-    useTransition,
-} from 'react'
-import { useRouter } from 'next/navigation'
-import {
     Loader2,
     MailPlus,
     UserPlus,
 } from 'lucide-react'
-
+import { useRouter } from 'next/navigation'
 import {
-    createSchoolInvitation,
-    type CreateSchoolInvitationInput,
-} from '@/actions/school-actions'
+    FormEvent,
+    useState,
+    useTransition,
+} from 'react'
 
 import { Button } from '@/components/ui/button'
 import {
@@ -27,6 +22,7 @@ import {
 } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { CreateSchoolInvitationInput } from '@/types/school'
 
 type StudentsPanelProps = {
     schoolId: string

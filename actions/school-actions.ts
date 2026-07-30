@@ -5,8 +5,12 @@ import { redirect } from 'next/navigation'
 import { z } from 'zod'
 
 import { createClient } from '@/lib/auth/supabase-server'
-import { generateInvitationCode, hashInvitationCode } from '@/lib/school/generate-code'
+import { generateInvitationCode } from '@/lib/school/generate-code'
 import { CreateSchoolInvitationInput, CreateSchoolInvitationResult, CreateSchoolState, CurrentSchoolData, CurrentSchoolMembership, SchoolMembership } from '@/types/school'
+
+
+
+
 
 
 const createSchoolSchema = z.object({
@@ -31,187 +35,120 @@ const createSchoolSchema = z.object({
 })
 
 
-/**
- * Pobiera szkołę przypisaną do obecnie zalogowanego użytkownika.
- *
- * Funkcję wywołuj wyłącznie z Server Componentu,
- * Server Action albo Route Handlera.
- */
 
 
 
 
-export async function getCurrentSchoolForUser() {
-    const supabase = await createClient()
-
-    const {
-        data: { user },
-        error: userError,
-    } = await supabase.auth.getUser()
-
-    if (userError || !user) {
-        return {
-            user: null,
-            membership: null,
-            school: null,
-            needsSchoolSetup: false,
-            error:
-                userError ??
-                new Error('Brak zalogowanego użytkownika'),
-        }
-    }
-
-    const { data: membership, error: membershipError } = await supabase
-        .from('school_memberships')
-        .select(`
-      id,
-      role,
-      status,
-      school_id,
-      school:schools (
-        id,
-        name,
-        email,
-        address,
-        status
-      )
-    `)
-        .eq('user_id', user.id)
-        .eq('status', 'active')
-        .maybeSingle()
+export type CreateSchoolState = {
+    error?: string | null;
+    success?: boolean;
+    fieldErrors?: {
+        name?: string[];
+        email?: string[];
+        address?: string[];
+    };
+};
 
 
-
-    if (membershipError) {
-        return {
-            user,
-            membership: null,
-            school: null,
-            needsSchoolSetup: false,
-            error: membershipError,
-        }
-    }
-
-    if (!membership) {
-        return {
-            user,
-            membership: null,
-            school: null,
-            needsSchoolSetup: true,
-            error: null,
-        }
-    }
-
-    /*
-     * Przy poprawnej relacji Supabase zwróci obiekt szkoły.
-     * Cast upraszcza typy do czasu wygenerowania Database types.
-     */
-    const school = membership.school as unknown as CurrentSchoolData | null
-
-
-
-    return {
-        user,
-        membership: {
-            id: membership.id,
-            school_id: membership.school_id,
-            role: membership.role,
-            status: membership.status,
-        } satisfies CurrentSchoolMembership,
-        school,
-        needsSchoolSetup: false,
-        error: null,
-    }
-}
 
 export async function createSchoolAction(
     _previousState: CreateSchoolState,
     formData: FormData,
 ): Promise<CreateSchoolState> {
     const parsed = createSchoolSchema.safeParse({
-        name: formData.get('name'),
-        email: formData.get('email'),
-        address: formData.get('address'),
-    })
+        name: formData.get("name"),
+        email: formData.get("email"),
+        address: formData.get("address"),
+    });
 
     if (!parsed.success) {
         return {
             success: false,
-            error: 'Sprawdź dane formularza.',
+            error: "Sprawdź dane formularza.",
             fieldErrors: parsed.error.flatten().fieldErrors,
-        }
+        };
     }
 
-    const supabase = await createClient()
+    const supabase = await createClient();
 
     const {
         data: { user },
         error: userError,
-    } = await supabase.auth.getUser()
+    } = await supabase.auth.getUser();
 
     if (userError || !user) {
         return {
             success: false,
-            error: 'Sesja wygasła. Zaloguj się ponownie.',
+            error: "Sesja wygasła. Zaloguj się ponownie.",
             fieldErrors: {},
-        }
+        };
     }
 
-    const { data: schoolId, error } = await supabase.rpc('create_school', {
-        school_name: parsed.data.name,
-        school_email: parsed.data.email || null,
-        school_address: parsed.data.address,
-    })
+    const { data: schoolId, error } = await supabase.rpc(
+        "create_school",
+        {
+            school_name: parsed.data.name,
+            school_email: parsed.data.email || null,
+            school_address: parsed.data.address,
+        },
+    );
 
     if (error) {
-        console.error('create_school error:', error)
+        console.error("create_school error:", error);
 
-        const message = error.message.toLowerCase()
+        const message = error.message.toLowerCase();
 
         if (
-            message.includes('already owns') ||
-            message.includes('already belongs')
+            message.includes("already owns") ||
+            message.includes("already belongs")
         ) {
             return {
                 success: false,
-                error: 'To konto jest już przypisane do szkoły.',
+                error: "To konto jest już przypisane do szkoły.",
                 fieldErrors: {},
-            }
+            };
         }
 
         if (
-            message.includes('duplicate key') ||
-            message.includes('schools_address_key')
+            message.includes("duplicate key") ||
+            message.includes("schools_address_key")
         ) {
             return {
                 success: false,
-                error: 'Szkoła o takim adresie już istnieje.',
+                error: "Szkoła o takim adresie już istnieje.",
                 fieldErrors: {
-                    address: ['Ten adres jest już przypisany do innej szkoły.'],
+                    address: [
+                        "Ten adres jest już przypisany do innej szkoły.",
+                    ],
                 },
-            }
+            };
         }
 
         return {
             success: false,
-            error: 'Nie udało się utworzyć szkoły.',
+            error: "Nie udało się utworzyć szkoły.",
             fieldErrors: {},
-        }
+        };
     }
 
     if (!schoolId) {
         return {
             success: false,
-            error: 'Nie udało się pobrać identyfikatora utworzonej szkoły.',
+            error: "Nie udało się pobrać identyfikatora utworzonej szkoły.",
             fieldErrors: {},
-        }
+        };
     }
 
-    revalidatePath('/dashboard')
-    revalidatePath('/dashboard/settings')
-
-    redirect('/dashboard')
+    redirect("/dashboard/onboarding/payment");
 }
+
+
+/**
+ * Pobiera szkołę przypisaną do obecnie zalogowanego użytkownika.
+ *
+ * Funkcję wywołuj wyłącznie z Server Componentu,
+ * Server Action albo Route Handlera.
+ */
 
 
 
@@ -248,7 +185,7 @@ function isValidEmail(email: string): boolean {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
 }
 
-export async function createSchoolInvitation(
+export async function createSchoolInvitationAction(
     input: CreateSchoolInvitationInput
 ): Promise<CreateSchoolInvitationResult> {
     const schoolId = input.schoolId.trim()
@@ -438,9 +375,7 @@ export async function createSchoolInvitation(
         }
     }
 
-    const invitationCode = generateInvitationCode()
-    const invitationCodeHash =
-        hashInvitationCode(invitationCode)
+    const invitationCode = generateInvitationCode();
 
     const expiresAt = new Date(
         Date.now() + 7 * 24 * 60 * 60 * 1000
@@ -455,7 +390,7 @@ export async function createSchoolInvitation(
             first_name: firstName,
             last_name: lastName,
             status: 'pending',
-            invitation_code_hash: invitationCodeHash,
+            invitation_code: invitationCode,
             expires_at: expiresAt,
         })
         .select('id')
@@ -497,8 +432,7 @@ export async function createSchoolInvitation(
     return {
         success: true,
         invitationId: data.id,
-        invitationCode,
-        expiresAt,
+
     }
 }
 
@@ -518,16 +452,17 @@ export async function getSchoolInvitations(school_id: string) {
     } = await supabase
         .from('school_invitations')
         .select(`
-            id, email, first_name, last_name
+            id, email, first_name, last_name, invitation_code
             
         `)
 
         .eq("school_id", school_id)
-        .maybeSingle()
+        .eq("status", "pending")
+
 
     if (existingInvitationError) {
         console.error(
-            'Nie udało się sprawdzić istniejącego zaproszenia:',
+            'Nie udało się sprawdzić istniejących zaproszeń:',
             existingInvitationError
         )
 
@@ -537,19 +472,11 @@ export async function getSchoolInvitations(school_id: string) {
         }
     }
 
-    if (existingInvitations) {
-        return {
-            success: false,
-            field: 'email',
-            error: 'Aktywne zaproszenie dla tego adresu e-mail już istnieje.',
-        }
 
-
-    }
     console.log(existingInvitations)
 
     return {
-        students: existingInvitations
+        existingInvitations
     }
 
 
@@ -559,34 +486,4 @@ export async function getSchoolInvitations(school_id: string) {
 
 
 
-export async function getSchoolStudents() {
 
-    const supabase = await createClient();
-    const currentSchool = await getCurrentSchoolForUser();
-
-
-    const schoolId = currentSchool.school.id
-
-    const {
-        data: { user },
-        error: userError,
-    } = await supabase.auth.getUser()
-
-    if (userError || !user) {
-        return {
-
-        }
-    }
-
-    const data = await supabase
-        .from("school_memberships")
-        .select("user_id")
-        .eq("school_id", schoolId)
-        .eq("role", "student")
-
-    return (
-        data
-    )
-
-
-}
