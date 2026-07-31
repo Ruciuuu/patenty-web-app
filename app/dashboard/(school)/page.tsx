@@ -8,8 +8,9 @@ import {
 import { Badge } from '@/components/ui/badge'
 
 
+import { createStudentInvitationAction } from '@/actions/student-invitations'
 import { SchoolCard } from '@/components/home/schoolCard'
-import { StudentsForm } from '@/components/settings/studentsForm'
+import { StudentsForm } from '@/components/home/studentsForm'
 import { getCurrentSchool } from '@/lib/school/get-current-school'
 
 
@@ -18,6 +19,10 @@ import { getCurrentSchool } from '@/lib/school/get-current-school'
 export default async function SettingsPage() {
 
     const school = await getCurrentSchool()
+
+    if (!school) {
+        return null
+    }
 
 
     return (
@@ -34,8 +39,7 @@ export default async function SettingsPage() {
                             onLogout={handleLogout}
                         */}
                         <StudentsForm
-                            schoolId={school.id}
-
+                            action={createStudentInvitationAction}
                         />
 
                     </div>

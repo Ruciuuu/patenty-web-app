@@ -1,8 +1,5 @@
 'use client'
 
-import { useState } from 'react'
-import Link from 'next/link'
-import { useRouter } from 'next/navigation'
 import {
     AlertCircle,
     Eye,
@@ -11,71 +8,70 @@ import {
     LockKeyhole,
     Mail,
 } from 'lucide-react'
+import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import { useActionState, useEffect, useState } from 'react'
 
-import { createClient } from '@/lib/auth/supabase-browser'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 
-export function LoginForm() {
+export type LoginState = {
+    success: boolean
+    error?: string | null
+    redirectTo?: string | null
+}
+
+type LoginFormProps = {
+    action: (
+        previousState: LoginState,
+        formData: FormData,
+    ) => Promise<LoginState>
+}
+
+const initialState: LoginState = {
+    success: false,
+    error: null,
+    redirectTo: null,
+}
+
+export function LoginForm({
+    action,
+}: LoginFormProps) {
     const router = useRouter()
 
-    const [email, setEmail] = useState('')
-    const [password, setPassword] = useState('')
     const [showPassword, setShowPassword] = useState(false)
     const [rememberMe, setRememberMe] = useState(true)
-    const [error, setError] = useState<string | null>(null)
-    const [isPending, setIsPending] = useState(false)
 
+    const [state, formAction, isPending] =
+        useActionState(action, initialState)
 
-    const supabase = createClient()
-
-    async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
-        event.preventDefault()
-
-        setError(null)
-        setIsPending(true)
-
-        try {
-            const { data, error: loginError } =
-                await supabase.auth.signInWithPassword({
-                    email: email.trim(),
-                    password,
-                })
-
-            if (loginError) {
-                throw loginError
-            }
-
-            if (!data.user) {
-                throw new Error('Nie udało się pobrać danych użytkownika.')
-            }
-
-
-
-            router.refresh()
-        } catch (error) {
-            setError(
-                error instanceof Error
-                    ? getAuthErrorMessage(error.message)
-                    : 'Wystąpił nieoczekiwany błąd.',
-            )
-        } finally {
-            setIsPending(false)
+    useEffect(() => {
+        if (!state.success || !state.redirectTo) {
+            return
         }
-    }
+
+        router.replace(state.redirectTo)
+        router.refresh()
+    }, [state, router])
 
     return (
-        <form onSubmit={handleSubmit} className="space-y-5">
-            {error && (
+        <form
+            action={formAction}
+            className="space-y-5"
+        >
+            {state.error && (
                 <Alert
                     variant="destructive"
                     className="rounded-2xl border-red-200 bg-red-50 text-red-700"
                 >
                     <AlertCircle className="size-4" />
-                    <AlertDescription>{error}</AlertDescription>
+
+                    <AlertDescription>
+                        {state.error}
+                    </AlertDescription>
                 </Alert>
             )}
 
@@ -92,11 +88,10 @@ export function LoginForm() {
 
                     <Input
                         id="email"
+                        name="email"
                         type="email"
                         autoComplete="email"
                         placeholder="admin@szkola.pl"
-                        value={email}
-                        onChange={(event) => setEmail(event.target.value)}
                         disabled={isPending}
                         required
                         className="h-14 rounded-2xl border-[#D7E8EF] bg-white pl-12 pr-4 text-base text-[#163A59] shadow-sm placeholder:text-[#9BBCCE] focus-visible:border-[#78A4CB] focus-visible:ring-[#78A4CB]/20"
@@ -126,11 +121,10 @@ export function LoginForm() {
 
                     <Input
                         id="password"
+                        name="password"
                         type={showPassword ? 'text' : 'password'}
                         autoComplete="current-password"
                         placeholder="Wprowadź hasło"
-                        value={password}
-                        onChange={(event) => setPassword(event.target.value)}
                         disabled={isPending}
                         required
                         className="h-14 rounded-2xl border-[#D7E8EF] bg-white pl-12 pr-12 text-base text-[#163A59] shadow-sm placeholder:text-[#9BBCCE] focus-visible:border-[#78A4CB] focus-visible:ring-[#78A4CB]/20"
@@ -138,9 +132,15 @@ export function LoginForm() {
 
                     <button
                         type="button"
-                        onClick={() => setShowPassword((current) => !current)}
+                        onClick={() =>
+                            setShowPassword((current) => !current)
+                        }
                         disabled={isPending}
-                        aria-label={showPassword ? 'Ukryj hasło' : 'Pokaż hasło'}
+                        aria-label={
+                            showPassword
+                                ? 'Ukryj hasło'
+                                : 'Pokaż hasło'
+                        }
                         className="absolute right-4 top-1/2 -translate-y-1/2 text-[#9BBCCE] transition hover:text-[#4C8DD8]"
                     >
                         {showPassword ? (
@@ -156,14 +156,15 @@ export function LoginForm() {
                 <Checkbox
                     id="remember"
                     checked={rememberMe}
-                    onCheckedChange={(checked) => setRememberMe(checked === true)}
+                    onCheckedChange={(checked) =>
+                        setRememberMe(checked === true)
+                    }
                     className="border-[#BFD9E4] data-[state=checked]:border-[#4C8DD8] data-[state=checked]:bg-[#4C8DD8]"
                 />
 
                 <Label
                     htmlFor="remember"
-                    className="cursor-pointer text-sm font-normal text-[#68859A] "
-
+                    className="cursor-pointer text-sm font-normal text-[#68859A]"
                 >
                     Zapamiętaj mnie na tym urządzeniu
                 </Label>
@@ -185,25 +186,4 @@ export function LoginForm() {
             </Button>
         </form>
     )
-}
-
-function getAuthErrorMessage(message: string) {
-    const normalizedMessage = message.toLowerCase()
-
-    if (
-        normalizedMessage.includes('invalid login credentials') ||
-        normalizedMessage.includes('invalid credentials')
-    ) {
-        return 'Nieprawidłowy adres e-mail lub hasło.'
-    }
-
-    if (normalizedMessage.includes('email not confirmed')) {
-        return 'Potwierdź adres e-mail przed zalogowaniem.'
-    }
-
-    if (normalizedMessage.includes('rate limit')) {
-        return 'Wykonano zbyt wiele prób. Spróbuj ponownie za chwilę.'
-    }
-
-    return 'Nie udało się zalogować. Sprawdź dane i spróbuj ponownie.'
 }

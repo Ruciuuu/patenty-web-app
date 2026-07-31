@@ -29,13 +29,10 @@ export type CreateSchoolState = {
 }
 
 /* ---------------------------------- */
-
-
 export type CreateSchoolInvitationInput = {
-    schoolId: string
-    email: string
     firstName: string
     lastName: string
+    email: string
 }
 
 export type CreateSchoolInvitationResult =

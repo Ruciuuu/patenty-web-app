@@ -12,6 +12,7 @@ import {
     useTransition,
 } from 'react'
 
+import { CreateStudentInvitationResult } from '@/actions/student-invitations'
 import { Button } from '@/components/ui/button'
 import {
     Card,
@@ -22,10 +23,14 @@ import {
 } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { CreateSchoolInvitationInput } from '@/types/school'
+import {
+    CreateSchoolInvitationInput
+} from '@/types/school'
 
 type StudentsPanelProps = {
-    schoolId: string
+    action: (
+        input: CreateSchoolInvitationInput
+    ) => Promise<CreateStudentInvitationResult>
 }
 
 type FormErrors = Partial<
@@ -35,25 +40,25 @@ type FormErrors = Partial<
     >
 >
 
-const EMPTY_FORM: Omit<
-    CreateSchoolInvitationInput,
-    'schoolId'
-> = {
+const EMPTY_FORM: CreateSchoolInvitationInput = {
     firstName: '',
     lastName: '',
     email: '',
 }
 
 export function StudentsForm({
-    schoolId,
+    action,
 }: StudentsPanelProps) {
     const router = useRouter()
 
     const [form, setForm] = useState(EMPTY_FORM)
+
     const [errors, setErrors] =
         useState<FormErrors>({})
+
     const [successMessage, setSuccessMessage] =
         useState<string | null>(null)
+
     const [isPending, startTransition] =
         useTransition()
 
@@ -115,28 +120,22 @@ export function StudentsForm({
         setSuccessMessage(null)
 
         startTransition(async () => {
-            const result =
-                await createSchoolInvitation({
-                    schoolId,
-                    firstName:
-                        form.firstName.trim(),
-                    lastName:
-                        form.lastName.trim(),
-                    email: form.email
-                        .trim()
-                        .toLowerCase(),
-                })
+            const result = await action({
+                firstName: form.firstName.trim(),
+                lastName: form.lastName.trim(),
+                email: form.email
+                    .trim()
+                    .toLowerCase(),
+            })
 
             if (!result.success) {
                 if (result.field) {
                     setErrors({
-                        [result.field]:
-                            result.error,
+                        [result.field]: result.error,
                     })
                 } else {
                     setErrors({
-                        general:
-                            result.error,
+                        general: result.error,
                     })
                 }
 
@@ -144,9 +143,11 @@ export function StudentsForm({
             }
 
             setForm(EMPTY_FORM)
+
             setSuccessMessage(
                 'Zaproszenie zostało utworzone.'
             )
+
             router.refresh()
         })
     }

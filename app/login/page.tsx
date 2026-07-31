@@ -1,9 +1,10 @@
-import Link from 'next/link'
 import {
     ArrowLeft,
 } from 'lucide-react'
+import Link from 'next/link'
 
 import { LoginForm } from '@/components/auth/loginForm'
+import { loginAction } from '@/actions/auth-actions'
 
 export default function LoginPage() {
     return (
@@ -97,7 +98,7 @@ export default function LoginPage() {
                             </p>
                         </div>
 
-                        <LoginForm />
+                        <LoginForm action={loginAction} />
 
                         <div className="mt-8 rounded-2xl border border-[#dce4e7] bg-white/70 p-4 backdrop-blur">
                             <div className="flex items-start gap-3">
