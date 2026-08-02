@@ -1,9 +1,12 @@
 'use client'
 
 import {
+    CheckCircle2,
     Loader2,
+    Mail,
     MailPlus,
     UserPlus,
+    Users,
 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import {
@@ -23,13 +26,11 @@ import {
 } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import {
-    CreateSchoolInvitationInput
-} from '@/types/school'
+import { CreateSchoolInvitationInput } from '@/types/school'
 
 type StudentsPanelProps = {
     action: (
-        input: CreateSchoolInvitationInput
+        input: CreateSchoolInvitationInput,
     ) => Promise<CreateStudentInvitationResult>
 }
 
@@ -45,6 +46,9 @@ const EMPTY_FORM: CreateSchoolInvitationInput = {
     lastName: '',
     email: '',
 }
+
+const inputClassName =
+    'h-12 rounded-2xl border-[#E3E8F1] bg-[#F9FAFC] px-4 text-[#293681] shadow-none placeholder:text-[#A3AABD] focus-visible:border-[#4274D9] focus-visible:ring-[#4274D9]/15'
 
 export function StudentsForm({
     action,
@@ -64,7 +68,7 @@ export function StudentsForm({
 
     function updateField(
         field: keyof typeof EMPTY_FORM,
-        value: string
+        value: string,
     ) {
         setForm((current) => ({
             ...current,
@@ -95,7 +99,7 @@ export function StudentsForm({
             nextErrors.email = 'Podaj adres e-mail.'
         } else if (
             !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(
-                form.email.trim()
+                form.email.trim(),
             )
         ) {
             nextErrors.email =
@@ -108,7 +112,7 @@ export function StudentsForm({
     }
 
     function handleSubmit(
-        event: FormEvent<HTMLFormElement>
+        event: FormEvent<HTMLFormElement>,
     ) {
         event.preventDefault()
 
@@ -145,7 +149,7 @@ export function StudentsForm({
             setForm(EMPTY_FORM)
 
             setSuccessMessage(
-                'Zaproszenie zostało utworzone.'
+                'Zaproszenie zostało utworzone.',
             )
 
             router.refresh()
@@ -153,141 +157,207 @@ export function StudentsForm({
     }
 
     return (
-        <Card className="h-fit rounded-[28px]">
-            <CardHeader>
-                <div className="mb-2 flex size-12 items-center justify-center rounded-2xl bg-[#D9EEF7] text-[#3977A8]">
-                    <UserPlus className="size-6" />
-                </div>
+        <Card className="relative h-fit overflow-hidden rounded-none bg-white shadow-none">
+            <BackgroundDecoration />
 
-                <CardTitle className="text-2xl text-[#163A59]">
-                    Zaproś kursanta
-                </CardTitle>
-
-                <CardDescription className="leading-6 text-[#68859A]">
-                    Utwórz zaproszenie dla nowej osoby.
-                    Zaproszenie będzie przypisane do
-                    bieżącej szkoły.
-                </CardDescription>
-            </CardHeader>
-
-            <CardContent>
-                <form
-                    onSubmit={handleSubmit}
-                    className="space-y-5"
-                >
-                    <div className="space-y-2">
-                        <Label htmlFor="firstName">
-                            Imię
-                        </Label>
-
-                        <Input
-                            id="firstName"
-                            value={form.firstName}
-                            onChange={(event) =>
-                                updateField(
-                                    'firstName',
-                                    event.target.value
-                                )
-                            }
-                            disabled={isPending}
-                            placeholder="Jan"
-                            autoComplete="given-name"
-                            className="h-11 rounded-xl border-[#DDECF2]"
-                        />
-
-                        {errors.firstName && (
-                            <p className="text-sm text-red-600">
-                                {errors.firstName}
-                            </p>
-                        )}
-                    </div>
-
-                    <div className="space-y-2">
-                        <Label htmlFor="lastName">
-                            Nazwisko
-                        </Label>
-
-                        <Input
-                            id="lastName"
-                            value={form.lastName}
-                            onChange={(event) =>
-                                updateField(
-                                    'lastName',
-                                    event.target.value
-                                )
-                            }
-                            disabled={isPending}
-                            placeholder="Kowalski"
-                            autoComplete="family-name"
-                            className="h-11 rounded-xl border-[#DDECF2]"
-                        />
-
-                        {errors.lastName && (
-                            <p className="text-sm text-red-600">
-                                {errors.lastName}
-                            </p>
-                        )}
-                    </div>
-
-                    <div className="space-y-2">
-                        <Label htmlFor="email">
-                            Adres e-mail
-                        </Label>
-
-                        <Input
-                            id="email"
-                            type="email"
-                            value={form.email}
-                            onChange={(event) =>
-                                updateField(
-                                    'email',
-                                    event.target.value
-                                )
-                            }
-                            disabled={isPending}
-                            placeholder="jan@example.com"
-                            autoComplete="email"
-                            className="h-11 rounded-xl border-[#DDECF2]"
-                        />
-
-                        {errors.email && (
-                            <p className="text-sm text-red-600">
-                                {errors.email}
-                            </p>
-                        )}
-                    </div>
-
-                    {errors.general && (
-                        <div className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">
-                            {errors.general}
+            <div className="relative z-10">
+                <CardHeader className="border-b border-[#EDF0F5] px-6 pb-6 pt-6">
+                    <div className="flex items-start gap-4">
+                        <div className="flex size-12 shrink-0 items-center justify-center rounded-[18px] bg-[#EEF3FC] text-[#4274D9]">
+                            <UserPlus className="size-6" />
                         </div>
-                    )}
 
-                    {successMessage && (
-                        <div className="rounded-xl bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
-                            {successMessage}
+                        <div className="max-w-md">
+                            <p className="text-[11px] font-bold uppercase tracking-[0.15em] text-[#8B92A5]">
+                                Nowy kursant
+                            </p>
+
+                            <CardTitle className="mt-2 text-[26px] font-semibold tracking-[-0.03em] text-[#293681]">
+                                Zaproś kursanta
+                            </CardTitle>
+
+                            <CardDescription className="mt-2 text-sm leading-6 text-[#747B8F]">
+                                Utwórz zaproszenie przypisane do bieżącej szkoły.
+                                Kursant otrzyma dostęp po zakończeniu rejestracji.
+                            </CardDescription>
                         </div>
-                    )}
+                    </div>
+                </CardHeader>
 
-                    <Button
-                        type="submit"
-                        disabled={isPending}
-                        className="h-11 w-full rounded-xl bg-[#3478D9] font-semibold text-white hover:bg-[#2D68BE]"
+                <CardContent className="p-6">
+                
+
+                    <form
+                        onSubmit={handleSubmit}
+                        className="space-y-5"
                     >
-                        {isPending ? (
-                            <>
-                                <Loader2 className="mr-2 size-4 animate-spin" />
-                                Zapraszanie...
-                            </>
-                        ) : (
-                            <>
-                                <MailPlus className="mr-2 size-4" />
-                                Wyślij zaproszenie
-                            </>
-                        )}
-                    </Button>
-                </form>
-            </CardContent>
+                        <div className="grid gap-5 sm:grid-cols-2">
+                            <FormField
+                                id="firstName"
+                                label="Imię"
+                                value={form.firstName}
+                                placeholder="Jan"
+                                autoComplete="given-name"
+                                disabled={isPending}
+                                error={errors.firstName}
+                                onChange={(value) =>
+                                    updateField(
+                                        'firstName',
+                                        value,
+                                    )
+                                }
+                            />
+
+                            <FormField
+                                id="lastName"
+                                label="Nazwisko"
+                                value={form.lastName}
+                                placeholder="Kowalski"
+                                autoComplete="family-name"
+                                disabled={isPending}
+                                error={errors.lastName}
+                                onChange={(value) =>
+                                    updateField(
+                                        'lastName',
+                                        value,
+                                    )
+                                }
+                            />
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label
+                                htmlFor="email"
+                                className="text-sm font-semibold text-[#293681]"
+                            >
+                                Adres e-mail
+                            </Label>
+
+                            <div className="relative">
+                                <Mail className="pointer-events-none absolute left-4 top-1/2 size-5 -translate-y-1/2 text-[#9AA7BC]" />
+
+                                <Input
+                                    id="email"
+                                    type="email"
+                                    value={form.email}
+                                    onChange={(event) =>
+                                        updateField(
+                                            'email',
+                                            event.target.value,
+                                        )
+                                    }
+                                    disabled={isPending}
+                                    placeholder="jan@example.com"
+                                    autoComplete="email"
+                                    className={`${inputClassName} pl-12`}
+                                />
+                            </div>
+
+                            {errors.email ? (
+                                <p className="text-sm font-medium text-[#C65353]">
+                                    {errors.email}
+                                </p>
+                            ) : null}
+                        </div>
+
+                        {errors.general ? (
+                            <div className="rounded-[18px] border border-[#F0DADA] bg-[#FFF5F5] px-4 py-3 text-sm font-medium text-[#B54C4C]">
+                                {errors.general}
+                            </div>
+                        ) : null}
+
+                        {successMessage ? (
+                            <div className="flex items-center gap-3 rounded-[18px] border border-[#D6E7E6] bg-[#EEF7F7] px-4 py-3">
+                                <div className="flex size-9 items-center justify-center rounded-xl bg-white">
+                                    <CheckCircle2 className="size-5 text-[#4274D9]" />
+                                </div>
+
+                                <p className="text-sm font-semibold text-[#293681]">
+                                    {successMessage}
+                                </p>
+                            </div>
+                        ) : null}
+
+                        <div className="border-t border-[#EDF0F5] pt-5">
+                            <Button
+                                type="submit"
+                                disabled={isPending}
+                                className="h-12 w-full rounded-2xl bg-[#293681] font-semibold text-white shadow-none hover:bg-[#222D70]"
+                            >
+                                {isPending ? (
+                                    <>
+                                        <Loader2 className="mr-2 size-4 animate-spin" />
+                                        Tworzenie zaproszenia...
+                                    </>
+                                ) : (
+                                    <>
+                                        <MailPlus className="mr-2 size-4" />
+                                        Wyślij zaproszenie
+                                    </>
+                                )}
+                            </Button>
+                        </div>
+                    </form>
+                </CardContent>
+            </div>
         </Card>
+    )
+}
+
+function FormField({
+    id,
+    label,
+    value,
+    placeholder,
+    autoComplete,
+    disabled,
+    error,
+    onChange,
+}: {
+    id: string
+    label: string
+    value: string
+    placeholder: string
+    autoComplete: string
+    disabled: boolean
+    error?: string
+    onChange: (value: string) => void
+}) {
+    return (
+        <div className="space-y-2">
+            <Label
+                htmlFor={id}
+                className="text-sm font-semibold text-[#293681]"
+            >
+                {label}
+            </Label>
+
+            <Input
+                id={id}
+                value={value}
+                onChange={(event) =>
+                    onChange(event.target.value)
+                }
+                disabled={disabled}
+                placeholder={placeholder}
+                autoComplete={autoComplete}
+                className={inputClassName}
+            />
+
+            {error ? (
+                <p className="text-sm font-medium text-[#C65353]">
+                    {error}
+                </p>
+            ) : null}
+        </div>
+    )
+}
+
+function BackgroundDecoration() {
+    return (
+        <div className="pointer-events-none absolute inset-0 overflow-hidden">
+            <div className="absolute -right-24 -top-24 size-56 rounded-full bg-[#D0E7E6]/30" />
+            <div className="absolute -bottom-28 -left-24 size-64 rounded-full bg-[#EEF3FC]" />
+        </div>
     )
 }

@@ -17,7 +17,7 @@ export function SchoolCard({
     school,
 }: SchoolCardProps) {
     return (
-        <section className="relative overflow-hidden rounded-[28px] border border-[#E4E9F2] bg-white">
+        <section className="relative overflow-hidden  border border-[#E4E9F2] bg-white">
             <BackgroundDecoration />
 
             <div className="relative z-10">

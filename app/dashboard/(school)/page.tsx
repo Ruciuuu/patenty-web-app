@@ -7,14 +7,14 @@ import {
 
 import { Badge } from '@/components/ui/badge'
 
-
+import {Header} from '@/components/home/header'
 import { createStudentInvitationAction } from '@/actions/student-invitations'
 import { SchoolCard } from '@/components/home/schoolCard'
 import { StudentsForm } from '@/components/home/studentsForm'
 import { getCurrentSchool } from '@/lib/school/get-current-school'
-
-
-
+import { createClient } from '@/lib/auth/supabase-server'
+import {StudentsList} from '@/components/home/studentsList'
+import {getStudentsAction} from '@/actions/student-actions'
 
 export default async function SettingsPage() {
 
@@ -24,14 +24,18 @@ export default async function SettingsPage() {
         return null
     }
 
+    const supabase = await createClient();
+    const data = await supabase.auth.getUser();
+    const firstName = data.data.user.user_metadata?.first_name;
+    const lastName = data.data.user.user_metadata?.last_name;
+    
 
     return (
         <>
-            <main className="mx-auto px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
-                <SettingsHero />
-
+            <Header firstName={firstName} lastName={lastName} />
+            <main className="">
                 <div className="">
-                    <div className="space-y-6 flex flex-row  justify-start items-center gap-2">
+                    <div className="flex flex-row  justify-start items-start ">
                         <SchoolCard school={school} />
 
                         {/*  <LogoutCard
@@ -41,6 +45,11 @@ export default async function SettingsPage() {
                         <StudentsForm
                             action={createStudentInvitationAction}
                         />
+                        <StudentsList
+    initialStudents={students}
+    existingInvitations={invitations}
+    initialError={error}
+/>
 
                     </div>
 

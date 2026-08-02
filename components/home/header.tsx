@@ -1,4 +1,4 @@
-import { Activity, LogOutIcon, BarChart3, BookOpen, ChevronDown, Compass, GraduationCap, MoreHorizontal, Search, Settings, Users } from "lucide-react"
+import { LogOutIcon, ChevronDown,  Settings, Users } from "lucide-react"
 import Link from "next/link"
 import {
     DropdownMenu,
@@ -7,7 +7,7 @@ import {
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
-import { Button } from "./ui/button"
+import { Button } from "../ui/button"
 
 
 interface HeaderProps {
@@ -24,6 +24,11 @@ export function Header({
 }: HeaderProps) {
 
 
+
+    const handleLogout = () => {
+        
+
+    }
 
 
 
@@ -42,10 +47,10 @@ export function Header({
                 </Link>
 
                 <nav className="hidden items-center gap-1 lg:flex">
-                    <HeaderNavItem href="/dashboard" active icon={<Activity />}>
+                    <HeaderNavItem href="/dashboard" active >
                         Dashboard
                     </HeaderNavItem>
-                    <HeaderNavItem href="/dashboard/school" icon={<GraduationCap />}>
+                    <HeaderNavItem href="/dashboard/school" >
                         Szkoła
                     </HeaderNavItem>
 
@@ -109,12 +114,10 @@ export function Header({
 
 function HeaderNavItem({
     href,
-    icon,
     active = false,
     children,
 }: {
     href: string
-    icon: React.ReactNode
     active?: boolean
     children: React.ReactNode
 }) {
@@ -126,7 +129,6 @@ function HeaderNavItem({
                 : 'text-[#68859A] hover:bg-[#EEF7FA] hover:text-[#163A59]'
                 }`}
         >
-            <span className="[&_svg]:size-4">{icon}</span>
             {children}
         </Link>
     )

@@ -1,19 +1,26 @@
 'use server'
 
-import { createClient } from "@/lib/auth/supabase-server"
-import { GetStudentsResult, MembershipRow, ProfileRow, SchoolStudent } from "@/types/student"
-
- 
+import { createClient } from '@/lib/auth/supabase-server'
+import { getCurrentSchool } from '@/lib/school/get-current-school';
+import type {
+    GetStudentsResult,
+    MembershipRow,
+    ProfileRow,
+    SchoolInvitation,
+    SchoolStudent,
+} from '@/types/student'
 
 function isValidUuid(value: string): boolean {
     return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
-        value
+        value,
     )
 }
 
-export async function getStudents(
-    schoolId: string
+export async function getStudentsAction(
 ): Promise<GetStudentsResult> {
+    const school = await getCurrentSchool();
+    const schoolId = school?.id ?? '';
+
     const normalizedSchoolId = schoolId.trim()
 
     if (!normalizedSchoolId) {
@@ -40,7 +47,7 @@ export async function getStudents(
     if (userError) {
         console.error(
             'Nie udało się pobrać zalogowanego użytkownika:',
-            userError
+            userError,
         )
 
         return {
@@ -57,8 +64,8 @@ export async function getStudents(
     }
 
     /*
-     * Sprawdzamy, czy aktualnie zalogowany użytkownik
-     * należy do wskazanej szkoły.
+     * Sprawdzamy, czy aktualny użytkownik
+     * ma dostęp do tej szkoły.
      */
     const {
         data: currentUserMembership,
@@ -73,12 +80,13 @@ export async function getStudents(
         .eq('school_id', normalizedSchoolId)
         .eq('user_id', user.id)
         .eq('status', 'active')
+        .in('role', ['owner', 'admin'])
         .maybeSingle()
 
     if (currentUserMembershipError) {
         console.error(
             'Nie udało się sprawdzić członkostwa użytkownika:',
-            currentUserMembershipError
+            currentUserMembershipError,
         )
 
         return {
@@ -90,40 +98,64 @@ export async function getStudents(
     if (!currentUserMembership) {
         return {
             success: false,
-            error: 'Nie należysz do tej szkoły.',
+            error: 'Nie masz dostępu do tej szkoły.',
         }
     }
 
     /*
-     * Najpierw pobieramy członkostwa studentów.
+     * Pobieramy równolegle:
      *
-     * Nie wykonujemy tutaj relacji do profiles,
-     * ponieważ school_memberships.user_id ma klucz obcy
-     * do auth.users, a nie bezpośrednio do profiles.
+     * 1. aktywnych studentów,
+     * 2. zaproszenia wysłane przez szkołę.
      */
-    const {
-        data: membershipsData,
-        error: membershipsError,
-    } = await supabase
-        .from('school_memberships')
-        .select(`
-            id,
-            school_id,
-            user_id,
-            status,
-            created_at
-        `)
-        .eq('school_id', normalizedSchoolId)
-        .eq('role', 'student')
-        .eq('status', 'active')
-        .order('created_at', {
-            ascending: false,
-        })
+    const [
+        membershipsResult,
+        invitationsResult,
+    ] = await Promise.all([
+        supabase
+            .from('school_memberships')
+            .select(`
+                id,
+                school_id,
+                user_id,
+                status,
+                created_at
+            `)
+            .eq('school_id', normalizedSchoolId)
+            .eq('role', 'student')
+            .eq('status', 'active')
+            .order('created_at', {
+                ascending: false,
+            }),
 
-    if (membershipsError) {
+        supabase
+            .from('school_invitations')
+            .select(`
+                id,
+                school_id,
+                first_name,
+                last_name,
+                email,
+                status,
+                expires_at,
+                email_sent_at,
+                created_at
+            `)
+            .eq('school_id', normalizedSchoolId)
+            .in('status', [
+                'pending',
+                'expired',
+                'cancelled',
+            ])
+            .order('created_at', {
+                ascending: false,
+            }),
+    ])
+
+    if (membershipsResult.error) {
         console.error(
             'Nie udało się pobrać członkostw studentów:',
-            membershipsError
+            membershipsResult.error,
         )
 
         return {
@@ -132,13 +164,45 @@ export async function getStudents(
         }
     }
 
+    if (invitationsResult.error) {
+        console.error(
+            'Nie udało się pobrać zaproszeń:',
+            invitationsResult.error,
+        )
+
+        return {
+            success: false,
+            error: 'Nie udało się pobrać zaproszeń.',
+        }
+    }
+
     const memberships =
-        (membershipsData ?? []) as MembershipRow[]
+        (membershipsResult.data ?? []) as MembershipRow[]
+
+    const invitations: SchoolInvitation[] =
+        (invitationsResult.data ?? []).map(
+            (invitation) => ({
+                id: invitation.id,
+                schoolId: invitation.school_id,
+                firstName:
+                    invitation.first_name?.trim() ?? '',
+                lastName:
+                    invitation.last_name?.trim() ?? '',
+                email:
+                    invitation.email?.trim() ?? '',
+                status: invitation.status,
+                expiresAt: invitation.expires_at,
+                emailSentAt:
+                    invitation.email_sent_at ?? null,
+                createdAt: invitation.created_at,
+            }),
+        )
 
     if (memberships.length === 0) {
         return {
             success: true,
             students: [],
+            invitations,
         }
     }
 
@@ -146,13 +210,13 @@ export async function getStudents(
         new Set(
             memberships.map(
                 (membership) =>
-                    membership.user_id
-            )
-        )
+                    membership.user_id,
+            ),
+        ),
     )
 
     /*
-     * Drugim zapytaniem pobieramy profile użytkowników.
+     * Pobieramy profile studentów.
      */
     const {
         data: profilesData,
@@ -170,7 +234,7 @@ export async function getStudents(
     if (profilesError) {
         console.error(
             'Nie udało się pobrać profili studentów:',
-            profilesError
+            profilesError,
         )
 
         return {
@@ -189,14 +253,14 @@ export async function getStudents(
         profiles.map((profile) => [
             profile.id,
             profile,
-        ])
+        ]),
     )
 
     const students: SchoolStudent[] =
         memberships.map((membership) => {
             const profile =
                 profilesByUserId.get(
-                    membership.user_id
+                    membership.user_id,
                 )
 
             return {
@@ -204,11 +268,9 @@ export async function getStudents(
                 userId: membership.user_id,
                 schoolId: membership.school_id,
                 firstName:
-                    profile?.first_name?.trim() ??
-                    '',
+                    profile?.first_name?.trim() ?? '',
                 lastName:
-                    profile?.last_name?.trim() ??
-                    '',
+                    profile?.last_name?.trim() ?? '',
                 email:
                     profile?.email?.trim() ?? '',
                 status: membership.status,
@@ -226,12 +288,13 @@ export async function getStudents(
 
         return firstFullName.localeCompare(
             secondFullName,
-            'pl'
+            'pl',
         )
     })
 
     return {
         success: true,
         students,
+        invitations,
     }
 }

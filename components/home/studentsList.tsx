@@ -6,18 +6,21 @@ import {
 } from 'react'
 
 import {
+    Ban,
     ChevronRight,
     Clock3,
-    Copy,
     Mail,
+    MailCheck,
     MoreHorizontal,
+    RefreshCw,
     UserPlus,
     Users,
 } from 'lucide-react'
 
 import type {
+    SchoolInvitation,
     SchoolStudent,
-} from '@/actions/student-actions'
+} from '@/types/student'
 
 import {
     Avatar,
@@ -41,14 +44,6 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-
-export type SchoolInvitation = {
-    id: string
-    email: string
-    first_name: string
-    last_name: string
-    invitation_code: string
-}
 
 type ListView = 'students' | 'invitations'
 
@@ -77,9 +72,9 @@ export function StudentsList({
 
                 return firstName.localeCompare(
                     secondName,
-                    'pl'
+                    'pl',
                 )
-            }
+            },
         )
     }, [initialStudents])
 
@@ -87,19 +82,19 @@ export function StudentsList({
         return [...existingInvitations].sort(
             (
                 firstInvitation,
-                secondInvitation
+                secondInvitation,
             ) => {
                 const firstName =
-                    `${firstInvitation.last_name} ${firstInvitation.first_name}`.trim()
+                    `${firstInvitation.lastName} ${firstInvitation.firstName}`.trim()
 
                 const secondName =
-                    `${secondInvitation.last_name} ${secondInvitation.first_name}`.trim()
+                    `${secondInvitation.lastName} ${secondInvitation.firstName}`.trim()
 
                 return firstName.localeCompare(
                     secondName,
-                    'pl'
+                    'pl',
                 )
-            }
+            },
         )
     }, [existingInvitations])
 
@@ -116,23 +111,23 @@ export function StudentsList({
                         <div>
                             <CardTitle className="flex items-center gap-3 text-2xl text-[#163A59]">
                                 {activeView ===
-                                    'students' ? (
+                                'students' ? (
                                     <Users className="size-6 text-[#3977A8]" />
                                 ) : (
                                     <UserPlus className="size-6 text-[#3977A8]" />
                                 )}
 
                                 {activeView ===
-                                    'students'
+                                'students'
                                     ? 'Lista kursantów'
                                     : 'Lista zaproszeń'}
                             </CardTitle>
 
                             <CardDescription className="mt-2 text-[#68859A]">
                                 {activeView ===
-                                    'students'
-                                    ? 'Aktywni członkowie szkoły z rolą kursanta.'
-                                    : 'Osoby oczekujące na założenie konta i dołączenie do szkoły.'}
+                                'students'
+                                    ? 'Aktywni kursanci przypisani do szkoły.'
+                                    : 'Osoby oczekujące na aktywację konta i dołączenie do szkoły.'}
                             </CardDescription>
                         </div>
 
@@ -141,14 +136,15 @@ export function StudentsList({
                             className="rounded-full bg-[#EAF5F9] px-3 py-1 text-[#3977A8]"
                         >
                             {displayedCount}{' '}
+
                             {activeView ===
-                                'students'
-                                ? displayedCount === 1
-                                    ? 'kursant'
-                                    : 'kursantów'
-                                : displayedCount === 1
-                                    ? 'zaproszenie'
-                                    : 'zaproszeń'}
+                            'students'
+                                ? getStudentsCountLabel(
+                                      displayedCount,
+                                  )
+                                : getInvitationsCountLabel(
+                                      displayedCount,
+                                  )}
                         </Badge>
                     </div>
 
@@ -158,12 +154,12 @@ export function StudentsList({
                             variant="ghost"
                             onClick={() =>
                                 setActiveView(
-                                    'students'
+                                    'students',
                                 )
                             }
                             className={
                                 activeView ===
-                                    'students'
+                                'students'
                                     ? 'rounded-xl bg-white text-[#163A59] shadow-sm hover:bg-white'
                                     : 'rounded-xl text-[#68859A] hover:bg-white/70 hover:text-[#163A59]'
                             }
@@ -176,9 +172,7 @@ export function StudentsList({
                                 variant="secondary"
                                 className="ml-2 rounded-full bg-[#EAF5F9] px-2 text-[#3977A8]"
                             >
-                                {
-                                    sortedStudents.length
-                                }
+                                {sortedStudents.length}
                             </Badge>
                         </Button>
 
@@ -187,12 +181,12 @@ export function StudentsList({
                             variant="ghost"
                             onClick={() =>
                                 setActiveView(
-                                    'invitations'
+                                    'invitations',
                                 )
                             }
                             className={
                                 activeView ===
-                                    'invitations'
+                                'invitations'
                                     ? 'rounded-xl bg-white text-[#163A59] shadow-sm hover:bg-white'
                                     : 'rounded-xl text-[#68859A] hover:bg-white/70 hover:text-[#163A59]'
                             }
@@ -205,9 +199,7 @@ export function StudentsList({
                                 variant="secondary"
                                 className="ml-2 rounded-full bg-[#EAF5F9] px-2 text-[#3977A8]"
                             >
-                                {
-                                    sortedInvitations.length
-                                }
+                                {sortedInvitations.length}
                             </Badge>
                         </Button>
                     </div>
@@ -222,7 +214,7 @@ export function StudentsList({
                         </div>
                     </div>
                 ) : activeView ===
-                    'students' ? (
+                  'students' ? (
                     <StudentsView
                         students={
                             sortedStudents
@@ -285,7 +277,7 @@ function InvitationsView({
                     <UserPlus className="size-8" />
                 }
                 title="Brak zaproszeń"
-                description="Nie ma obecnie żadnych oczekujących zaproszeń."
+                description="Nie ma obecnie żadnych wysłanych zaproszeń."
             />
         )
     }
@@ -300,7 +292,7 @@ function InvitationsView({
                             invitation
                         }
                     />
-                )
+                ),
             )}
         </div>
     )
@@ -314,8 +306,8 @@ function StudentRow({
     student,
 }: StudentRowProps) {
     const initials =
-        `${student.firstName.charAt(0)}${student.lastName.charAt(0)}`.toUpperCase() ||
-        '?'
+        `${student.firstName.charAt(0)}${student.lastName.charAt(0)}`
+            .toUpperCase() || '?'
 
     const fullName =
         `${student.firstName} ${student.lastName}`.trim() ||
@@ -352,7 +344,7 @@ function StudentRow({
                     <p className="mt-1 text-xs text-[#9BBCCE]">
                         Dołączył:{' '}
                         {formatDate(
-                            student.joinedAt
+                            student.joinedAt,
                         )}
                     </p>
                 </div>
@@ -395,25 +387,12 @@ function InvitationRow({
     invitation,
 }: InvitationRowProps) {
     const initials =
-        `${invitation.first_name.charAt(0)}${invitation.last_name.charAt(0)}`.toUpperCase() ||
-        '?'
+        `${invitation.firstName.charAt(0)}${invitation.lastName.charAt(0)}`
+            .toUpperCase() || '?'
 
     const fullName =
-        `${invitation.first_name} ${invitation.last_name}`.trim() ||
+        `${invitation.firstName} ${invitation.lastName}`.trim() ||
         'Brak danych'
-
-    async function handleCopyCode() {
-        try {
-            await navigator.clipboard.writeText(
-                invitation.invitation_code
-            )
-        } catch (error) {
-            console.error(
-                'Nie udało się skopiować kodu:',
-                error
-            )
-        }
-    }
 
     return (
         <div className="grid gap-4 px-6 py-5 transition hover:bg-[#FAFCFD] lg:grid-cols-[1fr_auto] lg:items-center">
@@ -430,80 +409,115 @@ function InvitationRow({
                             {fullName}
                         </p>
 
-                        <Badge
-                            variant="secondary"
-                            className="rounded-full bg-amber-50 text-amber-700 hover:bg-amber-50"
-                        >
-                            <Clock3 className="mr-1 size-3" />
-                            Oczekuje
-                        </Badge>
+                        <InvitationStatusBadge
+                            status={
+                                invitation.status
+                            }
+                        />
                     </div>
 
                     <p className="mt-1 truncate text-sm text-[#7C98AB]">
                         {invitation.email}
                     </p>
+
+                    <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-[#9BBCCE]">
+                        <span>
+                            Utworzono:{' '}
+                            {formatDate(
+                                invitation.createdAt,
+                            )}
+                        </span>
+
+                        <span>
+                            Wysłano:{' '}
+                            {invitation.emailSentAt
+                                ? formatDate(
+                                      invitation.emailSentAt,
+                                  )
+                                : 'nie wysłano'}
+                        </span>
+
+                        <span>
+                            Wygasa:{' '}
+                            {formatDate(
+                                invitation.expiresAt,
+                            )}
+                        </span>
+                    </div>
                 </div>
             </div>
 
-            <div className="flex flex-wrap items-center gap-3 pl-15 lg:pl-0">
-                <div className="rounded-2xl border border-[#DDECF2] bg-[#F7FBFD] px-4 py-2">
-                    <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#9BBCCE]">
-                        Kod zaproszenia
-                    </p>
-
-                    <p className="mt-1 font-mono text-lg font-bold tracking-[0.25em] text-[#163A59]">
-                        {
-                            invitation.invitation_code
-                        }
-                    </p>
-                </div>
-
-                <Button
-                    type="button"
-                    size="icon"
-                    variant="outline"
-                    onClick={handleCopyCode}
-                    className="rounded-xl border-[#DDECF2] text-[#3977A8]"
-                >
-                    <Copy className="size-4" />
-
-                    <span className="sr-only">
-                        Kopiuj kod zaproszenia
-                    </span>
-                </Button>
-
-                <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                        <Button
-                            size="icon"
-                            variant="ghost"
-                            className="rounded-xl text-[#9BBCCE]"
-                        >
-                            <MoreHorizontal className="size-5" />
-
-                            <span className="sr-only">
-                                Opcje zaproszenia
-                            </span>
-                        </Button>
-                    </DropdownMenuTrigger>
-
-                    <DropdownMenuContent
-                        align="end"
-                        className="w-52 rounded-2xl border-[#DDECF2] p-2"
+            <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                    <Button
+                        size="icon"
+                        variant="ghost"
+                        className="rounded-xl text-[#9BBCCE]"
                     >
-                        <DropdownMenuItem
-                            onClick={
-                                handleCopyCode
-                            }
-                            className="rounded-xl"
-                        >
-                            <Copy className="mr-2 size-4" />
-                            Kopiuj kod
-                        </DropdownMenuItem>
-                    </DropdownMenuContent>
-                </DropdownMenu>
-            </div>
+                        <MoreHorizontal className="size-5" />
+
+                        <span className="sr-only">
+                            Opcje zaproszenia
+                        </span>
+                    </Button>
+                </DropdownMenuTrigger>
+
+                <DropdownMenuContent
+                    align="end"
+                    className="w-56 rounded-2xl border-[#DDECF2] p-2"
+                >
+                    <DropdownMenuItem className="rounded-xl">
+                        <RefreshCw className="mr-2 size-4" />
+                        Wyślij ponownie
+                    </DropdownMenuItem>
+
+                    <DropdownMenuItem className="rounded-xl text-red-600 focus:text-red-600">
+                        <Ban className="mr-2 size-4" />
+                        Anuluj zaproszenie
+                    </DropdownMenuItem>
+                </DropdownMenuContent>
+            </DropdownMenu>
         </div>
+    )
+}
+
+function InvitationStatusBadge({
+    status,
+}: {
+    status: SchoolInvitation['status']
+}) {
+    if (status === 'expired') {
+        return (
+            <Badge
+                variant="secondary"
+                className="rounded-full bg-red-50 text-red-700 hover:bg-red-50"
+            >
+                <Clock3 className="mr-1 size-3" />
+                Wygasło
+            </Badge>
+        )
+    }
+
+    if (status === 'cancelled') {
+        return (
+            <Badge
+                variant="secondary"
+                className="rounded-full bg-slate-100 text-slate-600 hover:bg-slate-100"
+            >
+                <Ban className="mr-1 size-3" />
+                Anulowane
+            </Badge>
+        )
+    }
+
+    return (
+        <Badge
+            variant="secondary"
+            className="rounded-full bg-amber-50 text-amber-700 hover:bg-amber-50"
+        >
+            <MailCheck className="mr-1 size-3" />
+            Oczekuje
+        </Badge>
     )
 }
 
@@ -535,7 +549,9 @@ function EmptyState({
     )
 }
 
-function formatDate(value: string): string {
+function formatDate(
+    value: string,
+): string {
     const date = new Date(value)
 
     if (Number.isNaN(date.getTime())) {
@@ -548,6 +564,54 @@ function formatDate(value: string): string {
             day: '2-digit',
             month: '2-digit',
             year: 'numeric',
-        }
+        },
     ).format(date)
+}
+
+function getStudentsCountLabel(
+    count: number,
+): string {
+    if (count === 1) {
+        return 'kursant'
+    }
+
+    const lastTwoDigits = count % 100
+    const lastDigit = count % 10
+
+    if (
+        lastDigit >= 2 &&
+        lastDigit <= 4 &&
+        !(
+            lastTwoDigits >= 12 &&
+            lastTwoDigits <= 14
+        )
+    ) {
+        return 'kursantów'
+    }
+
+    return 'kursantów'
+}
+
+function getInvitationsCountLabel(
+    count: number,
+): string {
+    if (count === 1) {
+        return 'zaproszenie'
+    }
+
+    const lastTwoDigits = count % 100
+    const lastDigit = count % 10
+
+    if (
+        lastDigit >= 2 &&
+        lastDigit <= 4 &&
+        !(
+            lastTwoDigits >= 12 &&
+            lastTwoDigits <= 14
+        )
+    ) {
+        return 'zaproszenia'
+    }
+
+    return 'zaproszeń'
 }
